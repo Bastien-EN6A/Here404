@@ -6,10 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import com.ironmind.here.ui.*
 import androidx.navigation.navArgument
-import com.ironmind.here.ui.HomeScreen
-import com.ironmind.here.ui.LoginScreen
-import com.ironmind.here.ui.SplashScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,12 +22,14 @@ class MainActivity : ComponentActivity() {
 fun HereApp() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "splash") {
-
+    NavHost(
+        navController = navController,
+        startDestination = "splash"
+    ) {
         composable("splash") {
             SplashScreen(
                 onReady = { navController.navigate("login") },
-                onError = { /* afficher une erreur si besoin */ }
+                onError = { /* gérer les erreurs */ }
             )
         }
 
@@ -42,11 +42,33 @@ fun HereApp() {
         }
 
         composable(
-            route = "home/{userId}",
+            "home/{userId}",
             arguments = listOf(navArgument("userId") { type = NavType.StringType })
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
-            HomeScreen(userId = userId)
+
+            MainScaffold(
+                userId = userId,
+                onNavigateToHome = { navController.navigate("home/$userId") },
+                onNavigateToSchedule = { navController.navigate("schedule/$userId") }
+            ) {
+                HomeScreen(userId = userId)
+            }
+        }
+
+        composable(
+            "schedule/{userId}",
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
+
+            MainScaffold(
+                userId = userId,
+                onNavigateToHome = { navController.navigate("home/$userId") },
+                onNavigateToSchedule = { navController.navigate("schedule/$userId") }
+            ) {
+                ScheduleScreen(userId = userId)
+            }
         }
     }
 }
