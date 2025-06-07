@@ -3,39 +3,72 @@ package com.ironmind.here.data
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import java.io.FileOutputStream
 
 object DatabaseHelper {
 
-    // Vérifie si un étudiant existe avec ce nom + prénom
-    fun verifyLogin(context: Context, nom: String, prenom: String): Boolean {
-        val dbPath = context.getDatabasePath("appli_presence.db")
-        if (!dbPath.exists()) {
-            Log.e("DatabaseHelper", "Base de données introuvable à : ${dbPath.absolutePath}")
-            return false
-        }
+    private const val DB_NAME = "emploi_temps_final.db"
 
-        val db = SQLiteDatabase.openDatabase(dbPath.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+    // Copie la base de données depuis les assets si elle n'existe pas encore
+    fun copyDatabaseIfNeeded(context: Context) {
+        val dbPath = context.getDatabasePath(DB_NAME)
+
+        if (!dbPath.exists()) {
+            dbPath.parentFile?.mkdirs()
+
+            try {
+                context.assets.open(DB_NAME).use { input ->
+                    FileOutputStream(dbPath).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                Log.d("DatabaseHelper", "Base de données copiée avec succès.")
+            } catch (e: Exception) {
+                Log.e("DatabaseHelper", "Erreur lors de la copie de la base : ${e.message}")
+            }
+        }
+    }
+
+    fun verifyLogin(context: Context, email: String, password: String): Boolean {
+        val db = openDatabase(context) ?: return false
 
         return try {
             val cursor = db.rawQuery(
-                "SELECT * FROM etudiants WHERE nom = ? AND prenom = ?",
-                arrayOf(nom, prenom)
+                "SELECT * FROM etudiants WHERE email = ? AND password = ?",
+                arrayOf(email, password)
             )
             val isValid = cursor.moveToFirst()
             cursor.close()
             isValid
         } catch (e: Exception) {
-            Log.e("DatabaseHelper", "Erreur d'accès à la base : ${e.message}")
+            Log.e("DatabaseHelper", "Erreur login: ${e.message}")
             false
         } finally {
             db.close()
         }
     }
 
-    // Récupère nom + prénom depuis un ID
+    fun getEtudiantId(context: Context, email: String, password: String): String? {
+        val db = openDatabase(context) ?: return null
+
+        return try {
+            val cursor = db.rawQuery(
+                "SELECT id FROM etudiants WHERE email = ? AND password = ?",
+                arrayOf(email, password)
+            )
+            val userId = if (cursor.moveToFirst()) cursor.getString(0) else null
+            cursor.close()
+            userId
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getEtudiantId: ${e.message}")
+            null
+        } finally {
+            db.close()
+        }
+    }
+
     fun getEtudiantById(context: Context, id: String): Pair<String, String> {
-        val dbPath = context.getDatabasePath("appli_presence.db").absolutePath
-        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+        val db = openDatabase(context) ?: return Pair("Erreur", "Erreur")
 
         return try {
             val cursor = db.rawQuery(
@@ -50,35 +83,20 @@ object DatabaseHelper {
                 Pair("Inconnu", "Inconnu")
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("DatabaseHelper", "Erreur getEtudiantById: ${e.message}")
             Pair("Erreur", "Erreur")
         } finally {
             db.close()
         }
     }
 
-
-    // Récupère l'ID de l'étudiant à partir de son nom et prénom
-    fun getEtudiantId(context: Context, nom: String, prenom: String): String? {
-        val dbPath = context.getDatabasePath("appli_presence.db")
-        if (!dbPath.exists()) return null
-
-        val db = SQLiteDatabase.openDatabase(dbPath.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
-
-        return try {
-            val cursor = db.rawQuery(
-                "SELECT id FROM etudiants WHERE nom = ? AND prenom = ?",
-                arrayOf(nom, prenom)
-            )
-            val id = if (cursor.moveToFirst()) cursor.getString(0) else null
-            cursor.close()
-            id
-        } catch (e: Exception) {
+    private fun openDatabase(context: Context): SQLiteDatabase? {
+        val dbPath = context.getDatabasePath(DB_NAME)
+        return if (dbPath.exists()) {
+            SQLiteDatabase.openDatabase(dbPath.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+        } else {
+            Log.e("DatabaseHelper", "Base introuvable à ${dbPath.absolutePath}")
             null
-        } finally {
-            db.close()
         }
     }
-
-
 }

@@ -32,7 +32,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
         TextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Nom") },
+            label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -41,7 +41,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
         TextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("Prénom") },
+            label = { Text("MDP") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
