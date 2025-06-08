@@ -4,6 +4,8 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import java.io.FileOutputStream
+import com.ironmind.here.model.Seance
+
 
 object DatabaseHelper {
 
@@ -89,6 +91,52 @@ object DatabaseHelper {
             db.close()
         }
     }
+
+    fun getSeancesPourEtudiant(context: Context, etudiantId: String): List<Seance> {
+        val dbPath = context.getDatabasePath("emploi_temps_final.db").absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val result = mutableListOf<Seance>()
+
+            val etuCursor = db.rawQuery("SELECT groupe_td, groupe_tp FROM etudiants WHERE id = ?", arrayOf(etudiantId))
+            if (!etuCursor.moveToFirst()) return emptyList()
+            val groupeTD = etuCursor.getString(0)
+            val groupeTP = etuCursor.getString(1)
+            etuCursor.close()
+
+            val now = java.time.LocalDateTime.now().toString()
+
+            val cursor = db.rawQuery(
+                "SELECT nom, debut, fin, location, groupe FROM seances WHERE debut > ? ORDER BY debut ASC",
+                arrayOf(now)
+            )
+
+            while (cursor.moveToNext()) {
+                val nom = cursor.getString(0)
+                val debut = cursor.getString(1)
+                val fin = cursor.getString(2)
+                val location = cursor.getString(3)
+                val groupe = cursor.getString(4)
+
+                if (groupe == "CM" || groupe == groupeTD || groupe == groupeTP) {
+                    result.add(Seance(nom, debut, fin, location, groupe))
+                }
+            }
+
+            cursor.close()
+            result
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        } finally {
+            db.close()
+        }
+    }
+
+
+
+
 
     private fun openDatabase(context: Context): SQLiteDatabase? {
         val dbPath = context.getDatabasePath(DB_NAME)
