@@ -1,6 +1,7 @@
 package com.ironmind.here.model
 
 data class Seance(
+    val id: Int,
     val nom: String,
     val debut: String,
     val fin: String,
@@ -8,3 +9,4 @@ data class Seance(
     val prof_id: Int,
     val groupe: String
 )
+

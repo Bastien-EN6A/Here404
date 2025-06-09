@@ -21,9 +21,12 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import androidx.compose.foundation.clickable
+import androidx.navigation.NavController
+
 
 @Composable
-fun ScheduleScreen(userId: String, role: String) {
+fun ScheduleScreen(userId: String, role: String, navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var seances by remember { mutableStateOf<List<Seance>>(emptyList()) }
@@ -130,6 +133,9 @@ fun ScheduleScreen(userId: String, role: String) {
                         .fillMaxWidth()
                         .height(height)
                         .background(Color(0xFFB3E5FC), RoundedCornerShape(12.dp))
+                        .clickable(enabled = role == "prof") {
+                            navController.navigate("presence/${seance.id}/${seance.groupe}")
+                        }
                         .padding(12.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.SpaceBetween) {

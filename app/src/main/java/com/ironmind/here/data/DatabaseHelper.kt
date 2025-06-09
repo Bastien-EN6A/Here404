@@ -146,7 +146,7 @@ object DatabaseHelper {
                 val groupe = cursor.getString(6)
 
                 if (groupe == "CM" || groupe == groupeTD || groupe == groupeTP) {
-                    result.add(Seance(nom, debut, fin, location, prof, groupe))
+                    result.add(Seance(id, nom, debut, fin, location, prof, groupe))
                 }
             }
 
@@ -188,19 +188,20 @@ object DatabaseHelper {
             val now = java.time.LocalDateTime.now().toString()
 
             val cursor = db.rawQuery(
-                "SELECT nom, debut, fin, location, prof_id, Groupe FROM seances WHERE debut > ? AND prof_id = ? ORDER BY debut ASC",
+                "SELECT id, nom, debut, fin, location, prof_id, Groupe FROM seances  WHERE debut > ? AND prof_id = ? ORDER BY debut ASC",
                 arrayOf(now, profId)
             )
 
             while (cursor.moveToNext()) {
-                val nom = cursor.getString(0)
-                val debut = cursor.getString(1)
-                val fin = cursor.getString(2)
-                val location = cursor.getString(3)
-                val prof = cursor.getInt(4)
-                val groupe = cursor.getString(5)
+                val id = cursor.getInt(0)
+                val nom = cursor.getString(1)
+                val debut = cursor.getString(2)
+                val fin = cursor.getString(3)
+                val location = cursor.getString(4)
+                val prof = cursor.getInt(5)
+                val groupe = cursor.getString(6)
 
-                result.add(Seance(nom, debut, fin, location, prof, groupe))
+                result.add(Seance(id, nom, debut, fin, location, prof, groupe))
             }
 
             cursor.close()
@@ -213,9 +214,39 @@ object DatabaseHelper {
         }
     }
 
+    fun getEtudiantsParGroupe(context: Context, groupe: String): List<Pair<String, String>> {
+        val db = openDatabase(context) ?: return emptyList()
+        return try {
+            val result = mutableListOf<Pair<String, String>>()
+            val query: String
+            val args: Array<String>
 
+            if (groupe == "CM") {
+                // Tous les étudiants
+                query = "SELECT id, nom, prenom FROM etudiants"
+                args = emptyArray()
+            } else {
+                // Groupe TD ou TP
+                query = "SELECT id, nom, prenom FROM etudiants WHERE groupe_td = ? OR groupe_tp = ?"
+                args = arrayOf(groupe, groupe)
+            }
 
-
+            val cursor = db.rawQuery(query, args)
+            while (cursor.moveToNext()) {
+                val id = cursor.getString(0)
+                val nom = cursor.getString(1)
+                val prenom = cursor.getString(2)
+                result.add(id to "$prenom $nom")
+            }
+            cursor.close()
+            result
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        } finally {
+            db.close()
+        }
+    }
 
     private fun openDatabase(context: Context): SQLiteDatabase? {
         val dbPath = context.getDatabasePath(DB_NAME)

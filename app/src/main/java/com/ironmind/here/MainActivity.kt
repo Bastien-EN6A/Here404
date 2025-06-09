@@ -38,6 +38,18 @@ fun HereApp() {
             )
         }
 
+        composable(
+            "presence/{seanceId}/{groupe}",
+            arguments = listOf(
+                navArgument("seanceId") { type = NavType.IntType },
+                navArgument("groupe") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val seanceId = backStackEntry.arguments?.getInt("seanceId") ?: 0
+            val groupe = backStackEntry.arguments?.getString("groupe") ?: ""
+            PresenceScreen(seanceId = seanceId, groupe = groupe)
+        }
+
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { userId, role, displayName ->
@@ -94,7 +106,11 @@ fun HereApp() {
                     navController.navigate("schedule/$userId/$role/$displayName")
                 }
             ) {
-                ScheduleScreen(userId = userId, role = role)
+                ScheduleScreen(
+                    userId = userId,
+                    role = role,
+                    navController = navController // ← ajouté ici
+                )
             }
         }
     }
