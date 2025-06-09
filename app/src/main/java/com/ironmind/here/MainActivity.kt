@@ -40,63 +40,61 @@ fun HereApp() {
 
         composable("login") {
             LoginScreen(
-                onLoginSuccess = { userId ->
-                    navController.navigate("home/$userId")
+                onLoginSuccess = { userId, role, displayName ->
+                    navController.navigate("home/$userId/$role/$displayName")
                 }
             )
         }
 
         composable(
-            "home/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            "home/{userId}/{role}/{displayName}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType },
+                navArgument("displayName") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
-            val context = LocalContext.current
-            var etudiantName by remember { mutableStateOf("") }
-
-            LaunchedEffect(userId) {
-                if (userId.isNotEmpty()) {
-                    val (nom, prenom) = withContext(Dispatchers.IO) {
-                        DatabaseHelper.getEtudiantById(context, userId)
-                    }
-                    etudiantName = "$prenom $nom"
-                }
-            }
+            val role = backStackEntry.arguments?.getString("role") ?: ""
+            val displayName = backStackEntry.arguments?.getString("displayName") ?: ""
 
             MainScaffold(
                 userId = userId,
-                etudiantName = etudiantName,
-                onNavigateToHome = { navController.navigate("home/$userId") },
-                onNavigateToSchedule = { navController.navigate("schedule/$userId") }
+                etudiantName = displayName,
+                onNavigateToHome = {
+                    navController.navigate("home/$userId/$role/$displayName")
+                },
+                onNavigateToSchedule = {
+                    navController.navigate("schedule/$userId/$role/$displayName")
+                }
             ) {
                 HomeScreen(userId = userId)
             }
         }
 
         composable(
-            "schedule/{userId}",
-            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+            "schedule/{userId}/{role}/{displayName}",
+            arguments = listOf(
+                navArgument("userId") { type = NavType.StringType },
+                navArgument("role") { type = NavType.StringType },
+                navArgument("displayName") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val userId = backStackEntry.arguments?.getString("userId") ?: ""
-            val context = LocalContext.current
-            var etudiantName by remember { mutableStateOf("") }
-
-            LaunchedEffect(userId) {
-                if (userId.isNotEmpty()) {
-                    val (nom, prenom) = withContext(Dispatchers.IO) {
-                        DatabaseHelper.getEtudiantById(context, userId)
-                    }
-                    etudiantName = "$prenom $nom"
-                }
-            }
+            val role = backStackEntry.arguments?.getString("role") ?: ""
+            val displayName = backStackEntry.arguments?.getString("displayName") ?: ""
 
             MainScaffold(
                 userId = userId,
-                etudiantName = etudiantName,
-                onNavigateToHome = { navController.navigate("home/$userId") },
-                onNavigateToSchedule = { navController.navigate("schedule/$userId") }
+                etudiantName = displayName,
+                onNavigateToHome = {
+                    navController.navigate("home/$userId/$role/$displayName")
+                },
+                onNavigateToSchedule = {
+                    navController.navigate("schedule/$userId/$role/$displayName")
+                }
             ) {
-                ScheduleScreen(userId = userId)
+                ScheduleScreen(userId = userId, role = role)
             }
         }
     }

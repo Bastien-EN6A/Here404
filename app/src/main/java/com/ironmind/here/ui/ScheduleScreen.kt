@@ -4,16 +4,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.Button
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ironmind.here.data.DatabaseHelper
@@ -24,20 +21,22 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import androidx.compose.runtime.remember
-
 
 @Composable
-fun ScheduleScreen(userId: String) {
+fun ScheduleScreen(userId: String, role: String) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var seances by remember { mutableStateOf<List<Seance>>(emptyList()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
 
-    LaunchedEffect(userId) {
+    LaunchedEffect(userId, role) {
         coroutineScope.launch {
             val result = withContext(Dispatchers.IO) {
-                DatabaseHelper.getSeancesPourEtudiant(context, userId)
+                if (role == "prof") {
+                    DatabaseHelper.getSeancesPourProf(context, userId)
+                } else {
+                    DatabaseHelper.getSeancesPourEtudiant(context, userId)
+                }
             }
             seances = result
         }
@@ -49,7 +48,7 @@ fun ScheduleScreen(userId: String) {
         date == selectedDate
     }
 
-    val hourHeight = 64.dp // un peu plus compact
+    val hourHeight = 64.dp
     val startHour = 8
     val endHour = 18
 
@@ -113,9 +112,15 @@ fun ScheduleScreen(userId: String) {
                 val yOffset = (offsetHours * hourHeight.value).dp
                 val height = (durationHours * hourHeight.value).dp
 
-                // Nom du professeur (memoized pour ne pas relancer la requête inutilement)
-                val profName by remember(seance.prof_id) {
-                    mutableStateOf(DatabaseHelper.getProfNameById(context, seance.prof_id))
+                // Résolution du nom du professeur
+                val profName = remember(seance.prof_id) {
+                    mutableStateOf("")
+                }
+
+                LaunchedEffect(seance.prof_id) {
+                    withContext(Dispatchers.IO) {
+                        profName.value = DatabaseHelper.getProfNameById(context, seance.prof_id)
+                    }
                 }
 
                 Box(
@@ -136,7 +141,7 @@ fun ScheduleScreen(userId: String) {
                             Text(text = seance.location)
                             Text(text = seance.groupe)
                         }
-                        Text(text = "Prof : $profName")
+                        Text(text = "Prof : ${profName.value}", fontSize = 12.sp)
                     }
                 }
             }

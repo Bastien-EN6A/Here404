@@ -14,7 +14,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun LoginScreen(onLoginSuccess: (String) -> Unit) {
+fun LoginScreen(
+    onLoginSuccess: (userId: String, role: String, displayName: String) -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
@@ -41,7 +43,7 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
         TextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text("MDP") },
+            label = { Text("Mot de passe") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
@@ -54,12 +56,14 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
                 message = ""
 
                 coroutineScope.launch {
-                    val userId: String? = withContext(Dispatchers.IO) {
-                        DatabaseHelper.getEtudiantId(context, email, password)
+                    val result = withContext(Dispatchers.IO) {
+                        DatabaseHelper.verifyLogin(context, email, password)
                     }
                     isLoading = false
-                    if (userId != null) {
-                        onLoginSuccess(userId)
+
+                    if (result != null) {
+                        val (userId, role, displayName) = result
+                        onLoginSuccess(userId, role, displayName)
                     } else {
                         message = "Identifiants invalides"
                     }
@@ -69,7 +73,10 @@ fun LoginScreen(onLoginSuccess: (String) -> Unit) {
             enabled = !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
             } else {
                 Text("Se connecter")
             }

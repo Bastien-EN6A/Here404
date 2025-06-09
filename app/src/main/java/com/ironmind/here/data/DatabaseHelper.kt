@@ -31,24 +31,48 @@ object DatabaseHelper {
         }
     }
 
-    fun verifyLogin(context: Context, email: String, password: String): Boolean {
-        val db = openDatabase(context) ?: return false
+    fun verifyLogin(context: Context, email: String, password: String): Triple<String, String, String>? {
+        val dbPath = context.getDatabasePath("emploi_temps_final.db")
+        if (!dbPath.exists()) return null
 
-        return try {
-            val cursor = db.rawQuery(
-                "SELECT * FROM etudiants WHERE email = ? AND password = ?",
+        val db = SQLiteDatabase.openDatabase(dbPath.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
+
+        try {
+            // Étudiant
+            val studentCursor = db.rawQuery(
+                "SELECT id, nom, prenom FROM etudiants WHERE email = ? AND password = ?",
                 arrayOf(email, password)
             )
-            val isValid = cursor.moveToFirst()
-            cursor.close()
-            isValid
+            if (studentCursor.moveToFirst()) {
+                val id = studentCursor.getString(0)
+                val nom = studentCursor.getString(1)
+                val prenom = studentCursor.getString(2)
+                studentCursor.close()
+                return Triple(id, "etudiant", "$prenom $nom")
+            }
+            studentCursor.close()
+
+            // Prof
+            val profCursor = db.rawQuery(
+                "SELECT id, nom FROM profs WHERE email = ? AND password = ?",
+                arrayOf(email, password)
+            )
+            if (profCursor.moveToFirst()) {
+                val id = profCursor.getInt(0).toString()
+                val nom = profCursor.getString(1)
+                profCursor.close()
+                return Triple(id, "prof", nom)
+            }
+            profCursor.close()
         } catch (e: Exception) {
-            Log.e("DatabaseHelper", "Erreur login: ${e.message}")
-            false
+            e.printStackTrace()
         } finally {
             db.close()
         }
+
+        return null
     }
+
 
     fun getEtudiantId(context: Context, email: String, password: String): String? {
         val db = openDatabase(context) ?: return null
@@ -153,6 +177,42 @@ object DatabaseHelper {
             db.close()
         }
     }
+
+    fun getSeancesPourProf(context: Context, profId: String): List<Seance> {
+        val dbPath = context.getDatabasePath("emploi_temps_final.db").absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val result = mutableListOf<Seance>()
+
+            val now = java.time.LocalDateTime.now().toString()
+
+            val cursor = db.rawQuery(
+                "SELECT nom, debut, fin, location, prof_id, Groupe FROM seances WHERE debut > ? AND prof_id = ? ORDER BY debut ASC",
+                arrayOf(now, profId)
+            )
+
+            while (cursor.moveToNext()) {
+                val nom = cursor.getString(0)
+                val debut = cursor.getString(1)
+                val fin = cursor.getString(2)
+                val location = cursor.getString(3)
+                val prof = cursor.getInt(4)
+                val groupe = cursor.getString(5)
+
+                result.add(Seance(nom, debut, fin, location, prof, groupe))
+            }
+
+            cursor.close()
+            result
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        } finally {
+            db.close()
+        }
+    }
+
 
 
 
