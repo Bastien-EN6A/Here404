@@ -5,5 +5,6 @@ data class Seance(
     val debut: String,
     val fin: String,
     val location: String,
+    val prof_id: Int,
     val groupe: String
 )

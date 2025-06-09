@@ -24,6 +24,8 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import androidx.compose.runtime.remember
+
 
 @Composable
 fun ScheduleScreen(userId: String) {
@@ -109,7 +111,12 @@ fun ScheduleScreen(userId: String) {
                 val durationHours = java.time.Duration.between(debut, fin).toMinutes().toFloat() / 60f
                 val offsetHours = debut.hour + debut.minute / 60f - startHour
                 val yOffset = (offsetHours * hourHeight.value).dp
-                val height = (durationHours * hourHeight.value).dp - 8.dp
+                val height = (durationHours * hourHeight.value).dp
+
+                // Nom du professeur (memoized pour ne pas relancer la requête inutilement)
+                val profName by remember(seance.prof_id) {
+                    mutableStateOf(DatabaseHelper.getProfNameById(context, seance.prof_id))
+                }
 
                 Box(
                     modifier = Modifier
@@ -117,18 +124,19 @@ fun ScheduleScreen(userId: String) {
                         .padding(start = 64.dp, end = 16.dp, bottom = 4.dp)
                         .fillMaxWidth()
                         .height(height)
-                        .background(Color(0xFFB3E5FC), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .background(Color(0xFFB3E5FC), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
                 ) {
-                    Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxSize()) {
-                        Text(text = seance.nom, style = MaterialTheme.typography.subtitle1)
+                    Column(verticalArrangement = Arrangement.SpaceBetween) {
+                        Text(text = seance.nom, style = MaterialTheme.typography.h6)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = seance.location, style = MaterialTheme.typography.caption)
-                            Text(text = seance.groupe, style = MaterialTheme.typography.caption)
+                            Text(text = seance.location)
+                            Text(text = seance.groupe)
                         }
+                        Text(text = "Prof : $profName")
                     }
                 }
             }

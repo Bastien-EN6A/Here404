@@ -108,19 +108,21 @@ object DatabaseHelper {
             val now = java.time.LocalDateTime.now().toString()
 
             val cursor = db.rawQuery(
-                "SELECT nom, debut, fin, location, groupe FROM seances WHERE debut > ? ORDER BY debut ASC",
+                "SELECT id, nom, debut, fin, location, prof_id, Groupe FROM seances WHERE debut > ? ORDER BY debut ASC",
                 arrayOf(now)
             )
 
             while (cursor.moveToNext()) {
-                val nom = cursor.getString(0)
-                val debut = cursor.getString(1)
-                val fin = cursor.getString(2)
-                val location = cursor.getString(3)
-                val groupe = cursor.getString(4)
+                val id = cursor.getInt(0)           // index 0 : id
+                val nom = cursor.getString(1)       // index 1 : nom
+                val debut = cursor.getString(2)     // index 2 : debut
+                val fin = cursor.getString(3)       // index 3 : fin
+                val location = cursor.getString(4)  // index 4 : location
+                val prof = cursor.getInt(5)         // index 5 : prof_id
+                val groupe = cursor.getString(6)
 
                 if (groupe == "CM" || groupe == groupeTD || groupe == groupeTP) {
-                    result.add(Seance(nom, debut, fin, location, groupe))
+                    result.add(Seance(nom, debut, fin, location, prof, groupe))
                 }
             }
 
@@ -134,6 +136,23 @@ object DatabaseHelper {
         }
     }
 
+    fun getProfNameById(context: Context, profId: Int): String {
+        val dbPath = context.getDatabasePath("emploi_temps_final.db").absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val cursor = db.rawQuery("SELECT nom FROM profs WHERE id = ?", arrayOf(profId.toString()))
+            if (cursor.moveToFirst()) {
+                cursor.getString(0)
+            } else {
+                "Prof inconnu"
+            }
+        } catch (e: Exception) {
+            "Erreur prof"
+        } finally {
+            db.close()
+        }
+    }
 
 
 
