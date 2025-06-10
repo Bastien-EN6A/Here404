@@ -65,4 +65,6 @@ dependencies {
     implementation("com.jcraft:jsch:0.1.55")
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("com.airbnb.android:lottie-compose:6.3.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+
 }
