@@ -3,8 +3,14 @@ package com.ironmind.here.data
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import androidx.work.OneTimeWorkRequestBuilder
 import java.io.FileOutputStream
 import com.ironmind.here.model.Seance
+import com.ironmind.here.sftpManager.ClearCache
+import com.ironmind.here.sftpManager.DataDeleter
+import com.ironmind.here.sftpManager.DataDownloader
+import com.ironmind.here.sftpManager.DataUploader
+import androidx.work.WorkManager
 
 
 object DatabaseHelper {
@@ -24,15 +30,28 @@ object DatabaseHelper {
                         input.copyTo(output)
                     }
                 }
-                Log.d("DatabaseHelper", "Base de données copiée avec succès.")
+                Log.d("DatabaseHelper", "Base de données par defaut copiée avec succès.")
             } catch (e: Exception) {
                 Log.e("DatabaseHelper", "Erreur lors de la copie de la base : ${e.message}")
             }
         }
     }
 
+    fun UpdateLocal(context: Context){
+        val downloadRequest = OneTimeWorkRequestBuilder<DataDownloader>().build()
+        val clearCache = OneTimeWorkRequestBuilder<ClearCache>().build()
+        WorkManager.getInstance(context).enqueue(clearCache) //pour nettoyer la bdd locale
+        WorkManager.getInstance(context).enqueue(downloadRequest) //pour telecharger
+    }
+    fun UpdateRasp(context: Context){
+        val uploadRequest = OneTimeWorkRequestBuilder<DataUploader>().build()
+        val deleteRequest = OneTimeWorkRequestBuilder<DataDeleter>().build()
+        WorkManager.getInstance(context).enqueue(deleteRequest) //pour delete les infos obsoletes
+        WorkManager.getInstance(context).enqueue(uploadRequest) //pour upload la nouvelle bdd sur le raspberry
+    }
+
     fun verifyLogin(context: Context, email: String, password: String): Triple<String, String, String>? {
-        val dbPath = context.getDatabasePath("emploi_temps_final.db")
+        val dbPath = context.getDatabasePath(DB_NAME)
         if (!dbPath.exists()) return null
 
         val db = SQLiteDatabase.openDatabase(dbPath.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
@@ -117,7 +136,7 @@ object DatabaseHelper {
     }
 
     fun getSeancesPourEtudiant(context: Context, etudiantId: String): List<Seance> {
-        val dbPath = context.getDatabasePath("emploi_temps_final.db").absolutePath
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
         return try {
@@ -161,7 +180,7 @@ object DatabaseHelper {
     }
 
     fun getProfNameById(context: Context, profId: Int): String {
-        val dbPath = context.getDatabasePath("emploi_temps_final.db").absolutePath
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
         return try {
@@ -179,7 +198,7 @@ object DatabaseHelper {
     }
 
     fun getSeancesPourProf(context: Context, profId: String): List<Seance> {
-        val dbPath = context.getDatabasePath("emploi_temps_final.db").absolutePath
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
         return try {
