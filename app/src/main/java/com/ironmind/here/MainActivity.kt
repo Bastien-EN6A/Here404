@@ -3,21 +3,65 @@ package com.ironmind.here
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import com.ironmind.here.data.DatabaseHelper
 import com.ironmind.here.ui.*
 import androidx.navigation.navArgument
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.isSystemInDarkTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         DatabaseHelper.UpdateLocal(this)
         setContent {
-            HereApp()
+            CustomAppTheme {
+                HereApp()
+            }
         }
     }
+}
+
+@Composable
+fun CustomAppTheme(content: @Composable () -> Unit) {
+    val isDarkTheme = isSystemInDarkTheme()
+
+    val colors = if (isDarkTheme) {
+        darkColors(
+            primary = Color(0xFF2E7D32),
+            primaryVariant = Color(0xFF1B5E20),
+            secondary = Color(0xFF66BB6A),
+            background = Color(0xFF121212),
+            surface = Color(0xFF1E1E1E),
+            onPrimary = Color.White,
+            onSecondary = Color.White,
+            onBackground = Color.White,
+            onSurface = Color.White
+        )
+    } else {
+        lightColors(
+            primary = Color(0xFF2E7D32),
+            primaryVariant = Color(0xFF1B5E20),
+            secondary = Color(0xFF66BB6A),
+            background = Color(0xFFF6FFF8),
+            surface = Color.White,
+            onPrimary = Color.White,
+            onSecondary = Color.White,
+            onBackground = Color.Black,
+            onSurface = Color.Black
+        )
+    }
+
+    MaterialTheme(
+        colors = colors,
+        typography = Typography(),
+        shapes = Shapes(),
+        content = content
+    )
 }
 
 @Composable
@@ -99,7 +143,6 @@ fun HereApp() {
             }
         }
 
-        // ✅ Passage du navController à PresenceScreen
         composable(
             "presence/{seanceId}/{groupe}",
             arguments = listOf(
