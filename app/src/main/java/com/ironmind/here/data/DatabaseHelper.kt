@@ -295,4 +295,28 @@ object DatabaseHelper {
         }
     }
 
+    fun getAbsenceByEtudiantId(context: Context, etudiantId: String): Int {
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM absences WHERE etudiant_Id = ?",
+                arrayOf(etudiantId)
+            )
+            var count = 0
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0)
+            }
+            cursor.close()
+            count
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getAbsenceByEtudiantId: ${e.message}")
+            0
+        } finally {
+            db.close()
+        }
+    }
+
+
 }
