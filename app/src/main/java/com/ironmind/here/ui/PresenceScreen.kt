@@ -1,5 +1,6 @@
 package com.ironmind.here.ui
 
+import android.widget.CheckBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.material.*
@@ -25,6 +26,7 @@ fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) 
     val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
     var confirmationMessage by remember { mutableStateOf("") }
 
+    // Charger les étudiants du groupe
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -51,6 +53,20 @@ fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) 
         }
 
         Text("Liste de présence - Groupe $groupe", style = MaterialTheme.typography.h6)
+        var checked by remember { mutableStateOf(true) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = true,
+                onCheckedChange = { checked = it }
+            )
+            Text("coché = présent")
+        }
+
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -59,7 +75,10 @@ fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) 
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(onClick = {
-                etudiants.forEach { checkedStates[it.first] = true }
+                val allChecked = etudiants.all { checkedStates[it.first] == true }
+
+                // Si tous sont cochés, on décoche tout, sinon on coche tout
+                etudiants.forEach { checkedStates[it.first] = !allChecked }
             }) {
                 Text("Tout cocher")
             }
