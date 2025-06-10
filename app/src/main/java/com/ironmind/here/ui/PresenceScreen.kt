@@ -80,7 +80,7 @@ fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) 
                 // Si tous sont cochés, on décoche tout, sinon on coche tout
                 etudiants.forEach { checkedStates[it.first] = !allChecked }
             }) {
-                Text("Tout cocher/décocher")
+                Text("Tout cocher")
             }
 
             Button(onClick = {
