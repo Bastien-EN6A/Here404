@@ -1,13 +1,14 @@
 package com.ironmind.here.ui
 
 import androidx.compose.foundation.layout.*
+//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.ironmind.here.data.PreloadedDatabaseInstaller
+import com.ironmind.here.data.DatabaseHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
@@ -30,7 +31,7 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         val success = withContext(Dispatchers.IO) {
             try {
-                PreloadedDatabaseInstaller.copyDatabaseIfNeeded(context)
+                DatabaseHelper.copyDatabaseIfNeeded(context)
                 true
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -63,5 +63,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling:1.6.5")
     implementation("androidx.navigation:navigation-compose:2.7.7")
     implementation("com.jcraft:jsch:0.1.55")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("com.airbnb.android:lottie-compose:6.3.0")
 }
