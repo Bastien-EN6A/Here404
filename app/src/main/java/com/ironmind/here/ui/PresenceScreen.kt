@@ -1,5 +1,6 @@
 package com.ironmind.here.ui
 
+import android.widget.CheckBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.material.*
@@ -15,10 +16,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.ironmind.here.data.DatabaseHelper
 import androidx.compose.ui.graphics.Color
-
+import androidx.navigation.NavController
 
 @Composable
-fun PresenceScreen(seanceId: Int, groupe: String) {
+fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var etudiants by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
@@ -43,7 +44,29 @@ fun PresenceScreen(seanceId: Int, groupe: String) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Bouton retour
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            Text("← Retour")
+        }
+
         Text("Liste de présence - Groupe $groupe", style = MaterialTheme.typography.h6)
+        var checked by remember { mutableStateOf(true) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = true,
+                onCheckedChange = { checked = it }
+            )
+            Text("coché = présent")
+        }
+
 
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -52,10 +75,12 @@ fun PresenceScreen(seanceId: Int, groupe: String) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(onClick = {
-                // Tout cocher
-                etudiants.forEach { checkedStates[it.first] = true }
+                val allChecked = etudiants.all { checkedStates[it.first] == true }
+
+                // Si tous sont cochés, on décoche tout, sinon on coche tout
+                etudiants.forEach { checkedStates[it.first] = !allChecked }
             }) {
-                Text("Tout cocher")
+                Text("Tout cocher/décocher")
             }
 
             Button(onClick = {
