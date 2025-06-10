@@ -23,6 +23,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.clickable
 import androidx.navigation.NavController
+import java.util.Locale
+import androidx.compose.foundation.border
+
+
 
 
 @Composable
@@ -46,6 +50,7 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
     }
 
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+    val dateFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH)
     val seancesDuJour = seances.filter {
         val date = LocalDateTime.parse(it.debut, formatter).toLocalDate()
         date == selectedDate
@@ -53,7 +58,7 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
 
     val hourHeight = 64.dp
     val startHour = 8
-    val endHour = 18
+    val endHour = 20
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
@@ -61,12 +66,21 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(onClick = { selectedDate = selectedDate.minusDays(1) }) {
-                Text("← Précédent")
+            Button(
+                onClick = { selectedDate = selectedDate.minusDays(1) },
+                modifier = Modifier.size(width = 110.dp, height = 40.dp)
+            ) {
+                Text("Précédent")
             }
-            Text(text = selectedDate.toString(), style = MaterialTheme.typography.h6)
-            Button(onClick = { selectedDate = selectedDate.plusDays(1) }) {
-                Text("Suivant →")
+            Text(
+                text = selectedDate.format(dateFormatter),
+                style = MaterialTheme.typography.h6
+            )
+            Button(
+                onClick = { selectedDate = selectedDate.plusDays(1) },
+                modifier = Modifier.size(width = 100.dp, height = 40.dp)
+            ) {
+                Text("Suivant")
             }
         }
 
@@ -75,7 +89,7 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(((endHour - startHour) * hourHeight.value).dp)
+                .weight(1f)
         ) {
             // Affichage des heures à gauche
             Column(modifier = Modifier.align(Alignment.TopStart)) {
@@ -115,7 +129,6 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
                 val yOffset = (offsetHours * hourHeight.value).dp
                 val height = (durationHours * hourHeight.value).dp
 
-                // Résolution du nom du professeur
                 val profName = remember(seance.prof_id) {
                     mutableStateOf("")
                 }
@@ -133,24 +146,27 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
                         .fillMaxWidth()
                         .height(height)
                         .background(Color(0xFFB3E5FC), RoundedCornerShape(12.dp))
+                        .border(1.dp, Color(0xFF03A9F4), RoundedCornerShape(12.dp))
                         .clickable(enabled = role == "prof") {
                             navController.navigate("presence/${seance.id}/${seance.groupe}")
                         }
                         .padding(12.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.SpaceBetween) {
-                        Text(text = seance.nom, style = MaterialTheme.typography.h6)
+                        Text(text = seance.nom, style = MaterialTheme.typography.h6, color = Color(0xFF01579B))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(text = seance.location)
-                            Text(text = seance.groupe)
+                            Text(text = seance.location, color = Color(0xFF01579B))
+                            Text(text = seance.groupe, color = Color(0xFF01579B))
                         }
-                        Text(text = "Prof : ${profName.value}", fontSize = 12.sp)
+                        Text(text = "Prof : ${profName.value}", fontSize = 12.sp, color = Color(0xFF01579B))
                     }
                 }
             }
         }
     }
 }
+
+

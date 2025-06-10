@@ -32,7 +32,7 @@ fun MainScaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Here App")
+                    Text("Here!")
                 },
                 navigationIcon = {
                     IconButton(
