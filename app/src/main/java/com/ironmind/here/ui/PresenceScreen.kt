@@ -15,17 +15,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.ironmind.here.data.DatabaseHelper
 import androidx.compose.ui.graphics.Color
-
+import androidx.navigation.NavController
 
 @Composable
-fun PresenceScreen(seanceId: Int, groupe: String) {
+fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var etudiants by remember { mutableStateOf<List<Pair<String, String>>>(emptyList()) }
     val checkedStates = remember { mutableStateMapOf<String, Boolean>() }
     var confirmationMessage by remember { mutableStateOf("") }
 
-    // Charger les étudiants du groupe
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val result = withContext(Dispatchers.IO) {
@@ -43,6 +42,14 @@ fun PresenceScreen(seanceId: Int, groupe: String) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // Bouton retour
+        Button(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.padding(bottom = 8.dp)
+        ) {
+            Text("← Retour")
+        }
+
         Text("Liste de présence - Groupe $groupe", style = MaterialTheme.typography.h6)
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -52,7 +59,6 @@ fun PresenceScreen(seanceId: Int, groupe: String) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(onClick = {
-                // Tout cocher
                 etudiants.forEach { checkedStates[it.first] = true }
             }) {
                 Text("Tout cocher")
