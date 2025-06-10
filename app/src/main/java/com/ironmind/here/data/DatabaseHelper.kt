@@ -32,7 +32,7 @@ object DatabaseHelper {
                 }
                 Log.d("DatabaseHelper", "Base de données par defaut copiée avec succès.")
             } catch (e: Exception) {
-                Log.e("DatabaseHelper", "Erreur lors de la copie de la base : ${e.message}")
+                Log.e("DatabaseHelper", "Erreur lors de la copie de sauvegarde : ${e.message}")
             }
         }
     }
@@ -41,7 +41,12 @@ object DatabaseHelper {
         val downloadRequest = OneTimeWorkRequestBuilder<DataDownloader>().build()
         val clearCache = OneTimeWorkRequestBuilder<ClearCache>().build()
         WorkManager.getInstance(context).enqueue(clearCache) //pour nettoyer la bdd locale
-        WorkManager.getInstance(context).enqueue(downloadRequest) //pour telecharger
+        try {
+            WorkManager.getInstance(context).enqueue(downloadRequest) //pour telecharger
+        }catch(e:Exception){
+            copyDatabaseIfNeeded(context)
+            Log.e("DatabaseHelper", "Erreur lors de la copie de la base du raspberry : ${e.message}")
+        }
     }
     fun UpdateRasp(context: Context){
         val uploadRequest = OneTimeWorkRequestBuilder<DataUploader>().build()
