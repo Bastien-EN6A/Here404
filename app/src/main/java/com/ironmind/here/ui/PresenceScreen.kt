@@ -80,42 +80,55 @@ fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) 
                 // Si tous sont cochés, on décoche tout, sinon on coche tout
                 etudiants.forEach { checkedStates[it.first] = !allChecked }
             }) {
-                Text("Tout cocher")
+                Text("Tout cocher/décocher")
             }
-
+        }
             Button(onClick = {
-                confirmationMessage = "Liste des absences envoyée *validée*"
+                val absents = etudiants.filter { !checkedStates[it.first]!! }
+                coroutineScope.launch {
+                    withContext(Dispatchers.IO) {
+                        absents.forEach { etudiant ->
+                            DatabaseHelper.addEtudiantsAbs_seances(
+                                context,
+                                etudiant.first,
+                                seanceId
+                            )
+                        }
+                    }
+                    confirmationMessage = "Liste des absences envoyée *validée*"
+                }
             }) {
                 Text("Envoyer absences")
             }
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-        ) {
-            items(etudiants) { (id, nomComplet) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Checkbox(
-                        checked = checkedStates[id] ?: false,
-                        onCheckedChange = { checkedStates[id] = it }
-                    )
-                    Text(text = nomComplet)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                items(etudiants) { (id, nomComplet) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = checkedStates[id] ?: false,
+                            onCheckedChange = { checkedStates[id] = it }
+                        )
+                        Text(text = nomComplet)
+                    }
                 }
             }
-        }
 
-        if (confirmationMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = confirmationMessage, color = Color.Green)
+            if (confirmationMessage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = confirmationMessage, color = Color.Green)
+            }
         }
     }
-}
+

@@ -15,7 +15,7 @@ import androidx.work.WorkManager
 
 object DatabaseHelper {
 
-    private const val DB_NAME = "emploi_temps_final.db"
+    private const val DB_NAME = "will_emploi_temps_final.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
@@ -276,4 +276,18 @@ object DatabaseHelper {
             null
         }
     }
+
+    fun addEtudiantsAbs_seances(context: Context, etudiantId: String, seancesId: Int){
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE)
+
+        try {
+            db.execSQL("INSERT INTO absences VALUES(?, ?)", arrayOf(etudiantId, seancesId))
+        } catch (e: Exception) {
+            Log.e("DB", "Erreur insertion absence", e)
+        } finally {
+            db.close()
+        }
+    }
+
 }
