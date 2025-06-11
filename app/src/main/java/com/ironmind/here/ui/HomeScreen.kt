@@ -39,7 +39,7 @@ fun HomeScreen(userId: String) {
                 DatabaseHelper.getAbsenceByEtudiantId(context, userId)
             }
             val total = withContext(Dispatchers.IO) {
-                DatabaseHelper.getTotalSeancesPourEtudiant(context, userId)
+                DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
             }
 
             nom = n
@@ -48,6 +48,7 @@ fun HomeScreen(userId: String) {
             totalSeances = total
         }
     }
+
 
     val presenceCount = (totalSeances - absenceCount).coerceAtLeast(0)
 

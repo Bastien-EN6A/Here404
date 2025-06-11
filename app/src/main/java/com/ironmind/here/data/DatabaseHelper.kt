@@ -387,6 +387,35 @@ object DatabaseHelper {
         }
     }
 
+    fun getNombreSeancesPasseesPourEtudiant(context: Context, etudiantId: String): Int {
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val now = java.time.LocalDateTime.now().toString()
+
+            val etuCursor = db.rawQuery("SELECT groupe_td, groupe_tp FROM etudiants WHERE id = ?", arrayOf(etudiantId))
+            if (!etuCursor.moveToFirst()) return 0
+            val groupeTD = etuCursor.getString(0)
+            val groupeTP = etuCursor.getString(1)
+            etuCursor.close()
+
+            val cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM seances WHERE debut < ? AND (Groupe = 'CM' OR Groupe = ? OR Groupe = ?)",
+                arrayOf(now, groupeTD, groupeTP)
+            )
+
+            val total = if (cursor.moveToFirst()) cursor.getInt(0) else 0
+            cursor.close()
+            total
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getNombreSeancesPasseesPourEtudiant: ${e.message}")
+            0
+        } finally {
+            db.close()
+        }
+    }
+
     fun getTotalSeancesPourEtudiant(context: Context, etudiantId: String): Int {
         return getSeancesPourEtudiant(context, etudiantId).size
     }
