@@ -12,6 +12,7 @@ import com.ironmind.here.data.DatabaseHelper
 import com.ironmind.here.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.isSystemInDarkTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,26 +21,49 @@ class MainActivity : ComponentActivity() {
             DatabaseHelper.UpdateLocal(this)  //on met a jour la base de donnée locale
         }.start()
         setContent {
-            CustomAppTheme {
-                HereApp()
-            }
+            MainApp()
         }
     }
 }
 
 @Composable
-fun CustomAppTheme(content: @Composable () -> Unit) {
-    val colors = lightColors(
-        primary = Color(0xFF2E7D32),
-        primaryVariant = Color(0xFF1B5E20),
-        secondary = Color(0xFF66BB6A),
-        background = Color(0xFFF6FFF8),
-        surface = Color.White,
-        onPrimary = Color.White,
-        onSecondary = Color.White,
-        onBackground = Color.Black,
-        onSurface = Color.Black
-    )
+fun MainApp() {
+    // Utiliser directement isSystemInDarkTheme() dans le corps de la fonction composable
+    val isDarkMode = isSystemInDarkTheme()
+    val isDarkTheme = remember { mutableStateOf(isDarkMode) }
+
+    CustomAppTheme(darkTheme = isDarkTheme.value) {
+        HereApp(isDarkTheme = isDarkTheme)
+    }
+}
+
+@Composable
+fun CustomAppTheme(darkTheme: Boolean, content: @Composable () -> Unit) {
+    val colors = if (darkTheme) {
+        darkColors(
+            primary = Color(0xFF2E7D32),
+            primaryVariant = Color(0xFF1B5E20),
+            secondary = Color(0xFF66BB6A),
+            background = Color(0xFF121212),
+            surface = Color(0xFF1E1E1E),
+            onPrimary = Color.White,
+            onSecondary = Color.White,
+            onBackground = Color.White,
+            onSurface = Color.White
+        )
+    } else {
+        lightColors(
+            primary = Color(0xFF2E7D32),
+            primaryVariant = Color(0xFF1B5E20),
+            secondary = Color(0xFF66BB6A),
+            background = Color(0xFFF6FFF8),
+            surface = Color.White,
+            onPrimary = Color.White,
+            onSecondary = Color.White,
+            onBackground = Color.Black,
+            onSurface = Color.Black
+        )
+    }
 
     MaterialTheme(
         colors = colors,
@@ -50,7 +74,7 @@ fun CustomAppTheme(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun HereApp() {
+fun HereApp(isDarkTheme: MutableState<Boolean>) {
     val navController = rememberNavController()
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route ?: ""
@@ -106,7 +130,13 @@ fun HereApp() {
                 currentRoute = currentSubRoute,
                 onNavigateToHome = { subNavController.navigate("home") },
                 onNavigateToSchedule = { subNavController.navigate("schedule") },
-                onNavigateToProfile = { subNavController.navigate("profile") }
+                onNavigateToProfile = { subNavController.navigate("profile") },
+                isDarkTheme = isDarkTheme,
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo("splash") { inclusive = true }
+                    }
+                }
             ) {
                 NavHost(
                     navController = subNavController,

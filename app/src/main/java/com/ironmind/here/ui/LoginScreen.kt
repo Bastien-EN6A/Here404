@@ -23,10 +23,14 @@ import com.ironmind.here.data.DatabaseHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.LightMode
+
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (userId: String, role: String, displayName: String) -> Unit
+    onLoginSuccess: (userId: String, role: String, displayName: String) -> Unit,
+    isDarkTheme: MutableState<Boolean> = remember { mutableStateOf(false) }
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -38,12 +42,30 @@ fun LoginScreen(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
+    val backgroundColor = if (isDarkTheme.value) Color(0xFF121212) else Color(0xFFF6FFF8)
+    val textColor = if (isDarkTheme.value) Color.White else Color(0xFF2E7D32)
+    val primaryColor = Color(0xFF2E7D32)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF6FFF8))
             .padding(24.dp)
     ) {
+        // Bouton de changement de thème
+        IconButton(
+            onClick = { isDarkTheme.value = !isDarkTheme.value },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(8.dp)
+        ) {
+            Icon(
+                imageVector = if (isDarkTheme.value) Icons.Default.LightMode else Icons.Default.DarkMode,
+                contentDescription = "Changer de thème",
+                tint = textColor
+            )
+        }
+
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -70,7 +92,13 @@ fun LoginScreen(
                 label = { Text("Email") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                textColor = textColor,
+                cursorColor = primaryColor,
+                focusedBorderColor = primaryColor,
+                unfocusedBorderColor = textColor.copy(alpha = 0.5f)
+            )
             )
 
             Spacer(modifier = Modifier.height(12.dp))

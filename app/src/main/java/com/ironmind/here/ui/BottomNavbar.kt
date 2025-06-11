@@ -1,5 +1,10 @@
 package com.ironmind.here.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Home
@@ -13,23 +18,35 @@ fun BottomNavBar(
     currentRoute: String,
     onNavigateToHome: () -> Unit,
     onNavigateToSchedule: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    isDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    NavigationBar(containerColor = Color.White) {
-        NavigationBarItem(
+    val backgroundColor = if (isDarkTheme) Color(0xFF121212) else Color.White
+    val contentColor = if (isDarkTheme) Color.White else Color.Black
+    BottomNavigation(
+        backgroundColor = backgroundColor,
+        contentColor = contentColor
+    ) {
+        BottomNavigationItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Accueil") },
             selected = currentRoute == "home",
-            onClick = onNavigateToHome
+            onClick = onNavigateToHome,
+            selectedContentColor = MaterialTheme.colors.primary,
+            unselectedContentColor = contentColor.copy(alpha = 0.6f)
         )
-        NavigationBarItem(
+        BottomNavigationItem(
             icon = { Icon(Icons.Default.CalendarToday, contentDescription = "Emploi du temps") },
             selected = currentRoute == "schedule",
-            onClick = onNavigateToSchedule
+            onClick = onNavigateToSchedule,
+            selectedContentColor = MaterialTheme.colors.primary,
+            unselectedContentColor = contentColor.copy(alpha = 0.6f)
         )
-        NavigationBarItem(
+        BottomNavigationItem(
             icon = { Icon(Icons.Default.Person, contentDescription = "Profil") },
             selected = currentRoute == "profile",
-            onClick = onNavigateToProfile
+            onClick = onNavigateToProfile,
+            selectedContentColor = MaterialTheme.colors.primary,
+            unselectedContentColor = contentColor.copy(alpha = 0.6f)
         )
     }
 }
