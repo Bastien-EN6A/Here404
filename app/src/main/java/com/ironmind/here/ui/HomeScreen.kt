@@ -10,19 +10,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ironmind.here.data.DatabaseHelper
+import com.ironmind.here.model.Seance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.ironmind.here.model.Seance
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeScreen(userId: String) {
@@ -34,35 +33,36 @@ fun HomeScreen(userId: String) {
     var absenceCount by remember { mutableStateOf(0) }
     var totalSeances by remember { mutableStateOf(0) }
     var pastSeancesGrouped by remember { mutableStateOf<Map<String, List<Seance>>>(emptyMap()) }
+    var nextSeanceProf by remember { mutableStateOf<Seance?>(null) }
 
+    // Hypothèse : les profs ont un nom/prénom mais pas d'entrée dans la table d'absences
+    val isProf = remember { userId.toIntOrNull() != null && userId.toInt() > 0 }
 
     LaunchedEffect(userId) {
         coroutineScope.launch {
             val (n, p) = withContext(Dispatchers.IO) {
                 DatabaseHelper.getEtudiantById(context, userId)
             }
-            val abs = withContext(Dispatchers.IO) {
-                DatabaseHelper.getAbsenceByEtudiantId(context, userId)
-            }
-            val total = withContext(Dispatchers.IO) {
-                DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
-            }
-            val total_Prof = withContext(Dispatchers.IO) {
-                DatabaseHelper.getPastSeancesGroupedByDebut(context, userId)
-            }
-
-
-
-
             nom = n
             prenom = p
-            absenceCount = abs
-            totalSeances = total
-            pastSeancesGrouped = total_Prof
 
+            if (isProf) {
+                nextSeanceProf = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getNextSeanceForProf(context, userId)
+                }
+                pastSeancesGrouped = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getPastSeancesGroupedByDebut(context, userId)
+                }
+            } else {
+                absenceCount = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
+                }
+                totalSeances = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
+                }
+            }
         }
     }
-
 
     val presenceCount = (totalSeances - absenceCount).coerceAtLeast(0)
 
@@ -76,14 +76,36 @@ fun HomeScreen(userId: String) {
         Text(text = "Bienvenue, $prenom $nom", style = MaterialTheme.typography.h5)
         Spacer(modifier = Modifier.height(24.dp))
 
-        if (totalSeances > 0) {
-            PieChart(absenceCount, presenceCount)
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Absences : $absenceCount")
-            Text("Présences : $presenceCount")
-            Text("Séances totales : $totalSeances")
+        // Prof: prochaine séance
+        if (isProf && nextSeanceProf != null) {
+            val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+            val dateFormatted = try {
+                LocalDateTime.parse(nextSeanceProf!!.debut).format(formatter)
+            } catch (e: Exception) {
+                "Date invalide"
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Prochaine séance", fontWeight = FontWeight.Bold)
+                Text("${nextSeanceProf!!.nom} – $dateFormatted", color = Color(0xFF2E7D32))
+                Text("Lieu : ${nextSeanceProf!!.location}")
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+
+        if (!isProf) {
+            if (totalSeances > 0) {
+                PieChart(absenceCount, presenceCount)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Absences : $absenceCount")
+                Text("Présences : $presenceCount")
+                Text("Séances totales : $totalSeances")
+            } else {
+                Text("Aucune séance passée.")
+            }
         } else {
             Text("Séances passées (groupées par créneau) : ${pastSeancesGrouped.size}")
+            Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn {
                 pastSeancesGrouped.forEach { (debut, seances) ->
@@ -95,7 +117,6 @@ fun HomeScreen(userId: String) {
                     }
                 }
             }
-
         }
     }
 }
