@@ -22,6 +22,7 @@ fun HomeScreen(userId: String) {
 
     var nom by remember { mutableStateOf("") }
     var prenom by remember { mutableStateOf("") }
+    var absenceCount by remember { mutableStateOf(0) }
 
     // Chargement des infos depuis la base
     LaunchedEffect(userId) {
@@ -29,8 +30,12 @@ fun HomeScreen(userId: String) {
             val result: Pair<String, String> = withContext(Dispatchers.IO) {
                 DatabaseHelper.getEtudiantById(context, userId)
             }
+            val count = withContext(Dispatchers.IO) {
+                DatabaseHelper.getAbsenceByEtudiantId(context, userId)
+            }
             nom = result.first
             prenom = result.second
+            absenceCount = count
         }
     }
 
@@ -48,7 +53,9 @@ fun HomeScreen(userId: String) {
                 .background(Color.Gray, shape = CircleShape)
         )
 
-        Text(text = "Bienvenue, $prenom $nom" , style = MaterialTheme.typography.h5)
+        Text(text = "Bienvenue, $prenom $nom", style = MaterialTheme.typography.h5)
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(text = "Nombre d'absence total : $absenceCount")
     }
 }
 
