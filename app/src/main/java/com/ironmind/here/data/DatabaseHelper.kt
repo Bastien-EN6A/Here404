@@ -275,6 +275,8 @@ object DatabaseHelper {
         }
     }
 
+
+
     fun getEtudiantsParGroupe(context: Context, groupe: String): List<Pair<String, String>> {
         val db = openDatabase(context) ?: return emptyList()
         return try {
@@ -331,6 +333,36 @@ object DatabaseHelper {
             db.close()
         }
     }
+
+    fun getNextSeanceForProf(context: Context, profId: String): Seance? {
+        val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val now = java.time.LocalDateTime.now().toString()
+            val cursor = db.rawQuery(
+                "SELECT id, nom, debut, fin, location, prof_id, Groupe FROM seances WHERE debut > ? AND prof_id = ? ORDER BY debut ASC LIMIT 1",
+                arrayOf(now, profId)
+            )
+            if (cursor.moveToFirst()) {
+                Seance(
+                    id = cursor.getInt(0),
+                    nom = cursor.getString(1),
+                    debut = cursor.getString(2),
+                    fin = cursor.getString(3),
+                    location = cursor.getString(4),
+                    prof_id = cursor.getInt(5),
+                    groupe = cursor.getString(6)
+                )
+            } else null
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getNextSeanceForProf: ${e.message}")
+            null
+        } finally {
+            db.close()
+        }
+    }
+
 
     fun getAbsenceByEtudiantId(context: Context, etudiantId: String): Int {
         val dbPath = context.getDatabasePath(DB_NAME).absolutePath

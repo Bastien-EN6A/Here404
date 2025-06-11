@@ -22,6 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import com.ironmind.here.R
 import com.ironmind.here.data.DatabaseHelper
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
@@ -39,6 +41,11 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
     }
 
     val fullName = "$prenom $nom"
+
+    val nextSeance = remember(userId, role) {
+        if (role == "prof") DatabaseHelper.getNextSeanceForProf(context, userId) else null
+    }
+
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -99,11 +106,25 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
                     elevation = CardDefaults.cardElevation(6.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
+                        val formattedDate = nextSeance?.debut?.let {
+                            try {
+                                val inputFormat = DateTimeFormatter.ISO_LOCAL_DATE_TIME
+                                val outputFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+                                LocalDateTime.parse(it, inputFormat).format(outputFormat)
+                            } catch (e: Exception) {
+                                "Date invalide"
+                            }
+                        }
                         ProfileItem("Email", email)
                         if (role == "etudiant") {
                             ProfileItem("Groupe TD", groupeTd)
                             ProfileItem("Groupe TP", groupeTp)
                         }
+                        if (role == "prof" && nextSeance != null) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            ProfileItem("Prochain cours", "${nextSeance.nom} • $formattedDate")
+                        }
+
                     }
                 }
 
