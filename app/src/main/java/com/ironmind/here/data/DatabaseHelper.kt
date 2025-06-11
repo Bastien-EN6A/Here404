@@ -127,7 +127,6 @@ object DatabaseHelper {
 
     fun getEtudiantById(context: Context, id: String): Pair<String, String> {
         val db = openDatabase(context) ?: return Pair("Erreur", "Erreur")
-
         return try {
             val cursor = db.rawQuery(
                 "SELECT nom, prenom FROM etudiants WHERE id = ?",
