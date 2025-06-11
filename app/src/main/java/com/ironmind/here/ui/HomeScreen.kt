@@ -1,13 +1,18 @@
 package com.ironmind.here.ui
 
+import android.graphics.Paint
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.*
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.ironmind.here.data.DatabaseHelper
@@ -23,21 +28,28 @@ fun HomeScreen(userId: String) {
     var nom by remember { mutableStateOf("") }
     var prenom by remember { mutableStateOf("") }
     var absenceCount by remember { mutableStateOf(0) }
+    var totalSeances by remember { mutableStateOf(0) }
 
-    // Chargement des infos depuis la base
     LaunchedEffect(userId) {
         coroutineScope.launch {
-            val result: Pair<String, String> = withContext(Dispatchers.IO) {
+            val (n, p) = withContext(Dispatchers.IO) {
                 DatabaseHelper.getEtudiantById(context, userId)
             }
-            val count = withContext(Dispatchers.IO) {
+            val abs = withContext(Dispatchers.IO) {
                 DatabaseHelper.getAbsenceByEtudiantId(context, userId)
             }
-            nom = result.first
-            prenom = result.second
-            absenceCount = count
+            val total = withContext(Dispatchers.IO) {
+                DatabaseHelper.getTotalSeancesPourEtudiant(context, userId)
+            }
+
+            nom = n
+            prenom = p
+            absenceCount = abs
+            totalSeances = total
         }
     }
+
+    val presenceCount = (totalSeances - absenceCount).coerceAtLeast(0)
 
     Column(
         modifier = Modifier
@@ -46,16 +58,42 @@ fun HomeScreen(userId: String) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(
-            modifier = Modifier
-                .size(100.dp)
-                .padding(bottom = 16.dp)
-                .background(Color.Gray, shape = CircleShape)
-        )
-
         Text(text = "Bienvenue, $prenom $nom", style = MaterialTheme.typography.h5)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Nombre d'absence total : $absenceCount")
+        Spacer(modifier = Modifier.height(24.dp))
+
+        if (totalSeances > 0) {
+            PieChart(absenceCount, presenceCount)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Absences : $absenceCount")
+            Text("Présences : $presenceCount")
+            Text("Séances totales : $totalSeances")
+        } else {
+            Text("Aucune séance prévue.")
+        }
     }
 }
 
+@Composable
+fun PieChart(absences: Int, presences: Int) {
+    val total = (absences + presences).takeIf { it > 0 } ?: return
+    val absenceAngle = (absences.toFloat() / total) * 360f
+    val presenceAngle = 360f - absenceAngle
+
+    Canvas(modifier = Modifier.size(200.dp)) {
+        val size = Size(size.width, size.height)
+        drawArc(
+            color = Color(0xFFC62828), // Rouge pour absences
+            startAngle = 0f,
+            sweepAngle = absenceAngle,
+            useCenter = true,
+            size = size
+        )
+        drawArc(
+            color = Color(0xFF2E7D32), // Vert pour présences
+            startAngle = absenceAngle,
+            sweepAngle = presenceAngle,
+            useCenter = true,
+            size = size
+        )
+    }
+}

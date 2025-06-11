@@ -12,7 +12,7 @@ import com.ironmind.here.sftpManager.DataUploader
 
 object DatabaseHelper {
 
-    private const val DB_NAME = "will_emploi_temps_final.db"
+    private const val DB_NAME = "bdd_fictive_avec_absences.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
@@ -387,5 +387,7 @@ object DatabaseHelper {
         }
     }
 
-
+    fun getTotalSeancesPourEtudiant(context: Context, etudiantId: String): Int {
+        return getSeancesPourEtudiant(context, etudiantId).size
+    }
 }
