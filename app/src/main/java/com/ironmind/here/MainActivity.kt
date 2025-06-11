@@ -13,7 +13,9 @@ import androidx.navigation.navArgument
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DatabaseHelper.UpdateLocal(this)
+        Thread {
+            DatabaseHelper.UpdateLocal(this)
+        }.start()
         setContent {
             HereApp()
         }

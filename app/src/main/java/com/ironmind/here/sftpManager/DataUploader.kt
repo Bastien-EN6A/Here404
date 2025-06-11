@@ -6,19 +6,12 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import java.io.File
 
-class DataUploader(
-    appContext: Context,
-    workerParams: WorkerParameters
-) : Worker(appContext, workerParams) {
+class DataUploader(appContext: Context, workerParams: WorkerParameters) : Worker(appContext, workerParams) {
 
     override fun doWork(): Result {
         val TAG = "Uploader"
 
-        val sftpManager = SftpManager(
-            username = "groupe5",
-            password = "Hilbert23",
-            host = "10.74.252.206"
-        )
+        val sftpManager = SftpManager()
 
         return try {
             if (!sftpManager.connectSftp()) {
@@ -26,8 +19,8 @@ class DataUploader(
                 return Result.failure()
             }
 
-            val remotePath = "/data/appli_presence.db"
-            val localFile = File(applicationContext.getDatabasePath("appli_presence.db").absolutePath)
+            val remotePath = "/data/"+sftpManager.DB_NAME
+            val localFile = File(applicationContext.getDatabasePath(sftpManager.DB_NAME).absolutePath)
 
             val success = sftpManager.uploadToRaspberry(localFile.absolutePath, remotePath) //on upload vers le raspberry
             sftpManager.disconnectSftp()

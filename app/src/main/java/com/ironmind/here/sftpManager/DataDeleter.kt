@@ -5,19 +5,12 @@ import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 
-class DataDeleter(
-    appContext: Context,
-    workerParams: WorkerParameters
-) : Worker(appContext, workerParams) {
+class DataDeleter(appContext: Context, workerParams: WorkerParameters) : Worker(appContext, workerParams) {
 
     override fun doWork(): Result {
         val TAG = "DataDeleter"
 
-        val sftpManager = SftpManager(
-            username = "groupe5",
-            password = "Hilbert23",
-            host = "10.74.252.206"
-        )
+        val sftpManager = SftpManager()
 
         return try {
             if (!sftpManager.connectSftp()) {
@@ -25,7 +18,7 @@ class DataDeleter(
                 return Result.failure()
             }
 
-            val remotePath = "/data/appli_presence.db"
+            val remotePath = "/data/"+sftpManager.DB_NAME
             val success = sftpManager.deleteOnRaspberry(remotePath)
 
             sftpManager.disconnectSftp()
