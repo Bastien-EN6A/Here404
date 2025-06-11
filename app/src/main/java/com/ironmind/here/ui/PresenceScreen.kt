@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import com.ironmind.here.data.DatabaseHelper
+import com.ironmind.here.data.ScheduleState
 
 @Composable
 fun PresenceScreen(
@@ -41,6 +42,11 @@ fun PresenceScreen(
 
     val today = remember(selectedDate) { LocalDate.parse(selectedDate) }
     var selectedClass by remember { mutableStateOf(selectedClassName) }
+    
+    // Mettre à jour la date sélectionnée dans l'état partagé
+    LaunchedEffect(selectedDate) {
+        ScheduleState.selectedDate.value = today
+    }
 
     LaunchedEffect(groupe) {
         coroutineScope.launch {

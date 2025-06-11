@@ -34,7 +34,7 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SelectableDates
 import java.time.Instant
 import java.time.ZoneId
-
+import com.ironmind.here.data.ScheduleState
 
 
 @Composable
@@ -42,7 +42,8 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var seances by remember { mutableStateOf<List<Seance>>(emptyList()) }
-    var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    // Utiliser l'état partagé pour la date sélectionnée
+    var selectedDate by remember { ScheduleState.selectedDate }
     var showDatePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId, role) {
