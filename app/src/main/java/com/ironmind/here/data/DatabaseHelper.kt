@@ -12,7 +12,7 @@ import com.ironmind.here.sftpManager.DataUploader
 
 object DatabaseHelper {
 
-    const val DB_NAME = "debugging.db" //doit etre le meme que dans SftpManager.kt
+    private const val DB_NAME = "emploi_temps_final.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
@@ -82,7 +82,6 @@ object DatabaseHelper {
             }
         }.start()
     }
-
 
     fun verifyLogin(context: Context, email: String, password: String): Triple<String, String, String>? {
         val dbPath = context.getDatabasePath(DB_NAME)
@@ -310,4 +309,42 @@ object DatabaseHelper {
             null
         }
     }
+
+    fun addEtudiantsAbs_seances(context: Context, etudiantId: String, seancesId: Int){
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE)
+
+        try {
+            db.execSQL("INSERT INTO absences VALUES(?, ?)", arrayOf(etudiantId, seancesId))
+        } catch (e: Exception) {
+            Log.e("DB", "Erreur insertion absence", e)
+        } finally {
+            db.close()
+        }
+    }
+
+    fun getAbsenceByEtudiantId(context: Context, etudiantId: String): Int {
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM absences WHERE etudiant_Id = ?",
+                arrayOf(etudiantId)
+            )
+            var count = 0
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0)
+            }
+            cursor.close()
+            count
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getAbsenceByEtudiantId: ${e.message}")
+            0
+        } finally {
+            db.close()
+        }
+    }
+
+
 }
