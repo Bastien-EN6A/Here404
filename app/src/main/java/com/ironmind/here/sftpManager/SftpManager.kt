@@ -12,7 +12,6 @@ class SftpManager(
     private val password: String = "Hilbert23",
     private val host: String = "10.74.251.68",
     private val port: Int = 22,
-    val DB_NAME: String = "bdd_fictive_avec_absences.db" //doit etre le meme que dans DatabaseHelper.kt
 ) {
     private var session: Session? = null
     private var channelSftp: ChannelSftp? = null
