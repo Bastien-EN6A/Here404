@@ -362,6 +362,57 @@ object DatabaseHelper {
             db.close()
         }
     }
+    
+    fun getNextSeanceForEtudiant(context: Context, etudiantId: String): Seance? {
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            // Récupérer les groupes de l'étudiant
+            val etuCursor = db.rawQuery("SELECT groupe_td, groupe_tp FROM etudiants WHERE id = ?", arrayOf(etudiantId))
+            if (!etuCursor.moveToFirst()) return null
+            val groupeTD = etuCursor.getString(0)
+            val groupeTP = etuCursor.getString(1)
+            etuCursor.close()
+            
+            val now = java.time.LocalDateTime.now().toString()
+            
+            // Récupérer toutes les séances futures
+            val cursor = db.rawQuery(
+                "SELECT id, nom, debut, fin, location, prof_id, Groupe FROM seances WHERE debut > ? ORDER BY debut ASC",
+                arrayOf(now)
+            )
+            
+            var nextSeance: Seance? = null
+            
+            // Parcourir les résultats pour trouver la première séance applicable à l'étudiant
+            while (cursor.moveToNext()) {
+                val groupe = cursor.getString(6)
+                
+                // Vérifier si la séance s'applique à l'étudiant (CM ou son groupe TD/TP)
+                if (groupe == "CM" || groupe == groupeTD || groupe == groupeTP) {
+                    nextSeance = Seance(
+                        id = cursor.getInt(0),
+                        nom = cursor.getString(1),
+                        debut = cursor.getString(2),
+                        fin = cursor.getString(3),
+                        location = cursor.getString(4),
+                        prof_id = cursor.getInt(5),
+                        groupe = groupe
+                    )
+                    break // On s'arrête à la première séance trouvée
+                }
+            }
+            
+            cursor.close()
+            nextSeance
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getNextSeanceForEtudiant: ${e.message}")
+            null
+        } finally {
+            db.close()
+        }
+    }
 
 
     fun getAbsenceByEtudiantId(context: Context, etudiantId: String): Int {
