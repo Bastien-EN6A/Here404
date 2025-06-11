@@ -3,23 +3,22 @@ package com.ironmind.here.data
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import androidx.work.OneTimeWorkRequestBuilder
 import java.io.FileOutputStream
 import com.ironmind.here.model.Seance
 import com.ironmind.here.sftpManager.ClearCache
 import com.ironmind.here.sftpManager.DataDeleter
 import com.ironmind.here.sftpManager.DataDownloader
 import com.ironmind.here.sftpManager.DataUploader
-import androidx.work.WorkManager
-
 
 object DatabaseHelper {
 
-    private const val DB_NAME = "will_emploi_temps_final.db"
+    private const val DB_NAME = "emploi_temps_final.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
         val dbPath = context.getDatabasePath(DB_NAME)
+
+        Log.d("DatabaseHelper", "→ copyDatabaseIfNeeded() appelée, DB = $DB_NAME, existe = ${dbPath.exists()}")
 
         if (!dbPath.exists()) {
             dbPath.parentFile?.mkdirs()
@@ -30,29 +29,58 @@ object DatabaseHelper {
                         input.copyTo(output)
                     }
                 }
-                Log.d("DatabaseHelper", "Base de données par defaut copiée avec succès.")
+                Log.d("DatabaseHelper", "Base de données $DB_NAME copiée avec succès.")
             } catch (e: Exception) {
-                Log.e("DatabaseHelper", "Erreur lors de la copie de sauvegarde : ${e.message}")
+                Log.e("DatabaseHelper", "Erreur lors de la copie de $DB_NAME : ${e.message}")
             }
         }
     }
 
-    fun UpdateLocal(context: Context){
-        val downloadRequest = OneTimeWorkRequestBuilder<DataDownloader>().build()
-        val clearCache = OneTimeWorkRequestBuilder<ClearCache>().build()
-        WorkManager.getInstance(context).enqueue(clearCache) //pour nettoyer la bdd locale
-        try {
-            WorkManager.getInstance(context).enqueue(downloadRequest) //pour telecharger
-        }catch(e:Exception){
-            copyDatabaseIfNeeded(context)
-            Log.e("DatabaseHelper", "Erreur lors de la copie de la base du raspberry : ${e.message}")
+    fun UpdateLocal(context: Context) {
+        val TAG = "DatabaseHelper"
+        ClearCache.clear(context)
+        val success = DataDownloader.download(context)
+
+        if (!success) {
+            Log.e(TAG, "Téléchargement échoué")
+            try {
+                copyDatabaseIfNeeded(context)
+            }catch (e:Exception){
+                Log.e("DatabaseHelper", "Erreur lors de la copie de $DB_NAME : ${e.message}")
+            }
+        } else {
+            Log.i(TAG, "Téléchargement réussi")
         }
     }
-    fun UpdateRasp(context: Context){
-        val uploadRequest = OneTimeWorkRequestBuilder<DataUploader>().build()
-        val deleteRequest = OneTimeWorkRequestBuilder<DataDeleter>().build()
-        WorkManager.getInstance(context).enqueue(deleteRequest) //pour delete les infos obsoletes
-        WorkManager.getInstance(context).enqueue(uploadRequest) //pour upload la nouvelle bdd sur le raspberry
+
+
+
+
+
+    fun UpdateRasp(context: Context) {
+        val TAG = "DatabaseHelper"
+        Thread {
+            try {
+                val deleter = DataDeleter()
+                val deleted = deleter.deleteOnRaspberry()
+
+                if (!deleted) {
+                    Log.e(TAG, "Suppression distante échouée")
+                }
+
+                val uploader = DataUploader()
+                val uploaded = uploader.upload(context)
+
+                if (!uploaded) {
+                    Log.e(TAG, "Upload échoué")
+                } else {
+                    Log.i(TAG, "Upload réussi vers le Raspberry")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur UpdateRasp() : ${e.message}")
+            }
+        }.start()
     }
 
     fun verifyLogin(context: Context, email: String, password: String): Triple<String, String, String>? {

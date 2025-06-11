@@ -5,12 +5,14 @@ import com.jcraft.jsch.*
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.FileNotFoundException
 
 class SftpManager(
-    private val username: String,
-    private val password: String,
-    private val host: String,
-    private val port: Int = 22
+    private val username: String= "groupe5",
+    private val password: String = "Hilbert23",
+    private val host: String = "10.74.251.68",
+    private val port: Int = 22,
+    val DB_NAME: String = "debugging.db" //doit etre le meme que dans DatabaseHelper.kt
 ) {
     private var session: Session? = null
     private var channelSftp: ChannelSftp? = null
@@ -38,7 +40,7 @@ class SftpManager(
     fun uploadToRaspberry(localPath: String, remotePath: String): Boolean {
         return try {
             val file = File(localPath)
-            if (!file.exists()) return false
+            if (!file.exists()) throw FileNotFoundException("Fichier introuvable : $localPath")  // ⬅️ force une exception
             channelSftp?.put(FileInputStream(file), remotePath)
             true
         } catch (e: Exception) {
@@ -66,7 +68,9 @@ class SftpManager(
             false
         }
     }
-
+    fun isConnected(): Boolean {
+        return session?.isConnected == true && channelSftp?.isConnected == true
+    }
     fun disconnectSftp() {
         try {
             channelSftp?.takeIf { it.isConnected }?.disconnect()
@@ -74,9 +78,5 @@ class SftpManager(
         } catch (e: Exception) {
             Log.e(TAG, "Erreur lors de la déconnexion SFTP", e)
         }
-    }
-
-    fun isConnected(): Boolean {
-        return session?.isConnected == true && channelSftp?.isConnected == true
     }
 }

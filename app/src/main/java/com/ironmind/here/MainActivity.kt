@@ -16,7 +16,9 @@ import androidx.compose.ui.platform.LocalContext
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        DatabaseHelper.UpdateLocal(this)
+        Thread {
+            DatabaseHelper.UpdateLocal(this)  //on met a jour la base de donnée locale
+        }.start()
         setContent {
             CustomAppTheme {
                 HereApp()
