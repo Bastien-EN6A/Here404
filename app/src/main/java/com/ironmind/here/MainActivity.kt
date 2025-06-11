@@ -119,5 +119,27 @@ fun HereApp() {
                 }
             }
         }
+        composable(
+            "presence/{seanceId}/{groupe}/{coursNom}/{date}",
+            arguments = listOf(
+                navArgument("seanceId") { type = NavType.IntType },
+                navArgument("groupe") { type = NavType.StringType },
+                navArgument("coursNom") { type = NavType.StringType },
+                navArgument("date") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val seanceId = backStackEntry.arguments?.getInt("seanceId") ?: 0
+            val groupe = backStackEntry.arguments?.getString("groupe") ?: ""
+            val coursNom = backStackEntry.arguments?.getString("coursNom") ?: ""
+            val date = backStackEntry.arguments?.getString("date") ?: ""
+
+            PresenceScreen(
+                navController = navController,
+                seanceId = seanceId,
+                groupe = groupe,
+                selectedClassName = coursNom,
+                selectedDate = date
+            )
+        }
     }
 }

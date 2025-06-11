@@ -148,7 +148,9 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
                         .background(Color(0xFFB3E5FC), RoundedCornerShape(12.dp))
                         .border(1.dp, Color(0xFF03A9F4), RoundedCornerShape(12.dp))
                         .clickable(enabled = role == "prof") {
-                            navController.navigate("presence/${seance.id}/${seance.groupe}")
+                            val formattedDate = selectedDate.format(DateTimeFormatter.ISO_DATE)
+                            navController.navigate("presence/${seance.id}/${seance.groupe}/${seance.nom}/$formattedDate")
+
                         }
                         .padding(12.dp)
                 ) {
