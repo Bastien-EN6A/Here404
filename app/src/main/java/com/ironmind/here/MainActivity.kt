@@ -123,7 +123,15 @@ fun HereApp() {
                         ScheduleScreen(userId = userId, role = role, navController = navController)
                     }
                     composable("profile") {
-                        ProfileScreen(userId = userId, name = displayName)
+                        ProfileScreen(
+                            userId = userId,
+                            name = displayName,
+                            onLogout = {
+                                navController.navigate("login") {
+                                    popUpTo("splash") { inclusive = true }
+                                }
+                            }
+                        )
                     }
                 }
             }
