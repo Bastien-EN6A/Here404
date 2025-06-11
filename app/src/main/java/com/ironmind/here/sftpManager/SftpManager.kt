@@ -68,9 +68,6 @@ class SftpManager(
             false
         }
     }
-    fun isConnected(): Boolean {
-        return session?.isConnected == true && channelSftp?.isConnected == true
-    }
     fun disconnectSftp() {
         try {
             channelSftp?.takeIf { it.isConnected }?.disconnect()

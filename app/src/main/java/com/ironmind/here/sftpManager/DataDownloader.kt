@@ -2,7 +2,6 @@ package com.ironmind.here.sftpManager
 
 import android.content.Context
 import android.util.Log
-import java.io.File
 
 object DataDownloader {
     fun download(context: Context): Boolean {
