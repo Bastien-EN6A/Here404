@@ -4,6 +4,8 @@ import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -14,11 +16,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ironmind.here.data.DatabaseHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.ironmind.here.model.Seance
 
 @Composable
 fun HomeScreen(userId: String) {
@@ -29,6 +33,8 @@ fun HomeScreen(userId: String) {
     var prenom by remember { mutableStateOf("") }
     var absenceCount by remember { mutableStateOf(0) }
     var totalSeances by remember { mutableStateOf(0) }
+    var pastSeancesGrouped by remember { mutableStateOf<Map<String, List<Seance>>>(emptyMap()) }
+
 
     LaunchedEffect(userId) {
         coroutineScope.launch {
@@ -41,11 +47,19 @@ fun HomeScreen(userId: String) {
             val total = withContext(Dispatchers.IO) {
                 DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
             }
+            val total_Prof = withContext(Dispatchers.IO) {
+                DatabaseHelper.getPastSeancesGroupedByDebut(context, userId)
+            }
+
+
+
 
             nom = n
             prenom = p
             absenceCount = abs
             totalSeances = total
+            pastSeancesGrouped = total_Prof
+
         }
     }
 
@@ -69,7 +83,19 @@ fun HomeScreen(userId: String) {
             Text("Présences : $presenceCount")
             Text("Séances totales : $totalSeances")
         } else {
-            Text("Aucune séance prévue.")
+            Text("Séances passées (groupées par créneau) : ${pastSeancesGrouped.size}")
+
+            LazyColumn {
+                pastSeancesGrouped.forEach { (debut, seances) ->
+                    item {
+                        Text("Créneau : $debut", fontWeight = FontWeight.Bold)
+                    }
+                    items(seances, key = { it.id }) { seance ->
+                        Text(" - ${seance.nom} (${seance.groupe}) à ${seance.location}")
+                    }
+                }
+            }
+
         }
     }
 }

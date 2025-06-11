@@ -12,7 +12,7 @@ import com.ironmind.here.sftpManager.DataUploader
 
 object DatabaseHelper {
 
-    private const val DB_NAME = "bdd_fictive_avec_absences.db"
+    const val DB_NAME = "bdd_fictive_avec_absences.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
@@ -335,7 +335,7 @@ object DatabaseHelper {
     }
 
     fun getNextSeanceForProf(context: Context, profId: String): Seance? {
-        val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
         return try {
@@ -419,4 +419,42 @@ object DatabaseHelper {
     fun getTotalSeancesPourEtudiant(context: Context, etudiantId: String): Int {
         return getSeancesPourEtudiant(context, etudiantId).size
     }
+
+    fun getPastSeancesGroupedByDebut(context: Context, profId: String): Map<String, List<Seance>> {
+        val dbPath = context.getDatabasePath(DB_NAME).absolutePath
+        val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+        return try {
+            val now = java.time.LocalDateTime.now().toString()
+            val cursor = db.rawQuery(
+                "SELECT id, nom, debut, fin, location, prof_id, Groupe FROM seances WHERE debut < ? AND prof_id = ? ORDER BY debut DESC",
+                arrayOf(now, profId)
+            )
+
+            val seanceList = mutableListOf<Seance>()
+            while (cursor.moveToNext()) {
+                val seance = Seance(
+                    id = cursor.getInt(0),
+                    nom = cursor.getString(1),
+                    debut = cursor.getString(2),
+                    fin = cursor.getString(3),
+                    location = cursor.getString(4),
+                    prof_id = cursor.getInt(5),
+                    groupe = cursor.getString(6)
+                )
+                seanceList.add(seance)
+            }
+
+            // Regroupement par date+heure exacte de début (clé = début)
+            seanceList.groupBy { seance ->
+                seance.debut // format complet : "yyyy-MM-ddTHH:mm:ss"
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getPastSeancesGroupedByDebut: ${e.message}")
+            emptyMap()
+        } finally {
+            db.close()
+        }
+    }
+
 }

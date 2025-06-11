@@ -26,6 +26,7 @@ import com.ironmind.here.R
 import com.ironmind.here.data.DatabaseHelper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.ironmind.here.data.DatabaseHelper.DB_NAME
 
 @Composable
 fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit, isDarkTheme: Boolean = isSystemInDarkTheme()) {
@@ -210,7 +211,7 @@ fun ProfileItem(label: String, value: String, isDarkTheme: Boolean = isSystemInD
 // Prof only
 fun getEmailProf(context: Context, id: String): String {
     val db = SQLiteDatabase.openDatabase(
-        context.getDatabasePath("will_emploi_temps_final.db").absolutePath,
+        context.getDatabasePath(DB_NAME).absolutePath,
         null,
         SQLiteDatabase.OPEN_READONLY
     )
@@ -225,7 +226,7 @@ fun getEmailProf(context: Context, id: String): String {
 }
 
 fun getInfosEtudiant(context: Context, userId: String): Triple<String, String, String> {
-    val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
+    val dbPath = context.getDatabasePath(DB_NAME).absolutePath
     val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
     return try {

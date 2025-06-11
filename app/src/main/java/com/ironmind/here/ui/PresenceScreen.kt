@@ -3,6 +3,7 @@ package com.ironmind.here.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 //noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -73,7 +74,7 @@ fun PresenceScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Button(onClick = { navController.popBackStack() }) {
-                Text("← Retour")
+                Text("Retour")
             }
 
             Column(
@@ -97,17 +98,27 @@ fun PresenceScreen(
         ) {
             Button(onClick = {
                 etudiants.forEach { presenceStates[it.first] = true }
-            }) {
+            },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor =  Color(0xFF4CAF50)
+                )
+                ) {
                 Text("Tout Présent")
             }
             Button(onClick = {
                 etudiants.forEach { presenceStates[it.first] = false }
-            }) {
+            },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor =Color(0xFFF44336))
+                ) {
                 Text("Tout Absent")
             }
             Button(onClick = {
                 etudiants.forEach { presenceStates[it.first] = null }
-            }) {
+            },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color.LightGray)
+                    ) {
                 Text("Réinitialiser")
             }
         }
@@ -123,7 +134,7 @@ fun PresenceScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp),
+                        .padding(vertical = 1.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -140,21 +151,38 @@ fun PresenceScreen(
                             backgroundColor = if (presenceStates[id] == true) Color(0xFF4CAF50) else Color.LightGray,
                             contentColor = if (presenceStates[id] == true) Color.White else Color.Black
                         ),
-                        modifier = Modifier.padding(end = 8.dp)
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(1.dp), // évite l'expansion inutile du bouton
+                        modifier = Modifier
+                            .size(45.dp) // largeur = hauteur → bouton rond
+                            .padding(end = 1.dp)
                     ) {
-                        Text("✔️ Présent")
+                        Text("✔️")
                     }
+
+                    Spacer(modifier = Modifier.width(24.dp))
+
                     // Bouton Absent
                     Button(
                         onClick = { presenceStates[id] = false },
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = if (presenceStates[id] == false) Color(0xFFF44336) else Color.LightGray,
                             contentColor = if (presenceStates[id] == false) Color.White else Color.Black
-                        )
+                        ),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(1.dp), // évite l'expansion inutile du bouton
+                        modifier = Modifier
+                            .size(45.dp) // largeur = hauteur → bouton rond
+                            .padding(end = 1.dp)
                     ) {
-                        Text("❌ Absent")
+                        Text("❌")
                     }
                 }
+                Divider(
+                    color = Color.LightGray,
+                    thickness = 1.dp,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
             }
         }
 
