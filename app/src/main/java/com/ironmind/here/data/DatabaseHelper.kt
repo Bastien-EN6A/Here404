@@ -125,26 +125,6 @@ object DatabaseHelper {
         return null
     }
 
-
-    fun getEtudiantId(context: Context, email: String, password: String): String? {
-        val db = openDatabase(context) ?: return null
-
-        return try {
-            val cursor = db.rawQuery(
-                "SELECT id FROM etudiants WHERE email = ? AND password = ?",
-                arrayOf(email, password)
-            )
-            val userId = if (cursor.moveToFirst()) cursor.getString(0) else null
-            cursor.close()
-            userId
-        } catch (e: Exception) {
-            Log.e("DatabaseHelper", "Erreur getEtudiantId: ${e.message}")
-            null
-        } finally {
-            db.close()
-        }
-    }
-
     fun getEtudiantById(context: Context, id: String): Pair<String, String> {
         val db = openDatabase(context) ?: return Pair("Erreur", "Erreur")
 
@@ -153,13 +133,15 @@ object DatabaseHelper {
                 "SELECT nom, prenom FROM etudiants WHERE id = ?",
                 arrayOf(id)
             )
-            if (cursor.moveToFirst()) {
+            val result = if (cursor.moveToFirst()) {
                 val nom = cursor.getString(0)
                 val prenom = cursor.getString(1)
                 Pair(nom, prenom)
             } else {
                 Pair("Inconnu", "Inconnu")
             }
+            cursor.close()
+            result
         } catch (e: Exception) {
             Log.e("DatabaseHelper", "Erreur getEtudiantById: ${e.message}")
             Pair("Erreur", "Erreur")
@@ -217,13 +199,16 @@ object DatabaseHelper {
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
         return try {
-            val cursor = db.rawQuery("SELECT nom FROM profs WHERE id = ?", arrayOf(profId.toString()))
-            if (cursor.moveToFirst()) {
+            val cursor = db.rawQuery("SELECT nom FROM profs WHERE id = ?", arrayOf(profId.toString()))  //là y a un tostring
+            val result = if (cursor.moveToFirst()) {
                 cursor.getString(0)
             } else {
                 "Prof inconnu"
             }
+            cursor.close()
+            result
         } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur dans getProfNameById : ${e.message}")
             "Erreur prof"
         } finally {
             db.close()
@@ -238,13 +223,15 @@ object DatabaseHelper {
                 "SELECT nom, prenom FROM profs WHERE id = ?",
                 arrayOf(id)
             )
-            if (cursor.moveToFirst()) {
+            val result = if (cursor.moveToFirst()) {
                 val nom = cursor.getString(0) ?: "Inconnu"
                 val prenom = cursor.getString(1) ?: "Inconnu"
                 Pair(nom, prenom)
             } else {
                 Pair("Inconnu", "Inconnu")
             }
+            cursor.close()
+            result
         } catch (e: Exception) {
             Log.e("DatabaseHelper", "Erreur getProfById: ${e.message}")
             Pair("Erreur", "Erreur")
@@ -339,7 +326,7 @@ object DatabaseHelper {
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READWRITE)
 
         try {
-            db.execSQL("INSERT INTO absences VALUES(?, ?)", arrayOf(etudiantId, seancesId))
+            db.execSQL("INSERT INTO absences VALUES(?, ?)", arrayOf(etudiantId, seancesId.toString()))
         } catch (e: Exception) {
             Log.e("DB", "Erreur insertion absence", e)
         } finally {
