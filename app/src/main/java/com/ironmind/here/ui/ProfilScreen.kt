@@ -19,89 +19,97 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
-import androidx.compose.ui.zIndex
-import androidx.navigation.NavHostController
 import com.ironmind.here.R
 import com.ironmind.here.data.DatabaseHelper
 
 @Composable
-fun ProfileScreen(
-    userId: String,
-    name: String,
-    onLogout: () -> Unit = {}
-) {
+fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
 
-    // Données à afficher
-    val (email, groupeTd, groupeTp) = remember(userId) {
-        getEtudiantInfos(context, userId)
+    val (fullName, email, groupeTd, groupeTp) = remember(userId, role) {
+        when (role) {
+            "etudiant" -> {
+                val (nom, prenom) = DatabaseHelper.getEtudiantById(context, userId)
+                val name = "$prenom $nom"
+                val (mail, td, tp) = getEtudiantDetails(context, userId)
+                Quadruple(name, mail, td, tp)
+            }
+            "prof" -> {
+                val nom = DatabaseHelper.getProfNameById(context, userId.toIntOrNull() ?: -1)
+                val mail = getProfEmail(context, userId)
+                Quadruple(nom, mail, "", "")
+            }
+            else -> Quadruple("Inconnu", "Inconnu", "", "")
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
-            painter = painterResource(id = R.drawable.logo), // remplace par background si tu veux
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "background",
             contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(0f)
+            modifier = Modifier.fillMaxSize()
         )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White.copy(alpha = 0.85f))
-                .zIndex(1f)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .zIndex(2f),
-            verticalArrangement = Arrangement.Top,
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(Modifier.height(32.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(Modifier.height(32.dp))
 
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF2E7D32))
-                    .padding(20.dp)
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = name,
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2E7D32)
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF2E7D32))
+                        .padding(20.dp)
                 )
-            )
 
-            Text(
-                text = email,
-                style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
-            )
+                Spacer(Modifier.height(16.dp))
 
-            Spacer(Modifier.height(24.dp))
+                Text(
+                    text = fullName,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2E7D32)
+                    )
+                )
 
-            ProfileItem("ID étudiant", userId)
-            ProfileItem("Groupe TD", groupeTd)
-            ProfileItem("Groupe TP", groupeTp)
+                Text(
+                    text = "ID : $userId",
+                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+                )
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(Modifier.height(24.dp))
+
+                ProfileItem("Adresse email", email)
+
+                if (role == "etudiant") {
+                    ProfileItem("Groupe TD", groupeTd)
+                    ProfileItem("Groupe TP", groupeTp)
+                }
+            }
 
             Button(
                 onClick = { showDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC62828)),
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .padding(bottom = 24.dp)
             ) {
                 Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
@@ -132,25 +140,7 @@ fun ProfileScreen(
     }
 }
 
-@Composable
-fun ProfileItem(label: String, value: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 12.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge.copy(color = Color.Black)
-        )
-    }
-}
-
-fun getEtudiantInfos(context: Context, userId: String): Triple<String, String, String> {
+fun getEtudiantDetails(context: Context, userId: String): Triple<String, String, String> {
     val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
     val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
@@ -169,9 +159,49 @@ fun getEtudiantInfos(context: Context, userId: String): Triple<String, String, S
             Triple("Non trouvé", "Non trouvé", "Non trouvé")
         }
     } catch (e: Exception) {
-        e.printStackTrace()
         Triple("Erreur", "Erreur", "Erreur")
     } finally {
         db.close()
+    }
+}
+
+fun getProfEmail(context: Context, profId: String): String {
+    val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
+    val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
+
+    return try {
+        val cursor = db.rawQuery(
+            "SELECT email FROM profs WHERE id = ?",
+            arrayOf(profId)
+        )
+        if (cursor.moveToFirst()) {
+            cursor.getString(0) ?: "Inconnu"
+        } else {
+            "Non trouvé"
+        }
+    } catch (e: Exception) {
+        "Erreur"
+    } finally {
+        db.close()
+    }
+}
+
+data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@Composable
+fun ProfileItem(label: String, value: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp, horizontal = 12.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge.copy(color = Color.Black)
+        )
     }
 }
