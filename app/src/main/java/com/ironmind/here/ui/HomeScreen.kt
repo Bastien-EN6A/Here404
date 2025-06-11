@@ -4,6 +4,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.ironmind.here.model.SeanceStats
 
 @Composable
 fun HomeScreen(userId: String) {
@@ -37,7 +40,10 @@ fun HomeScreen(userId: String) {
     var nextSeanceEtudiant by remember { mutableStateOf<Seance?>(null) }
     var absenceCount by remember { mutableStateOf(0) }
     var totalSeances by remember { mutableStateOf(0) }
-    
+    var pastSeancesGrouped by remember { mutableStateOf<Map<String, List<Seance>>>(emptyMap()) }
+    var seanceStatsList by remember { mutableStateOf<List<SeanceStats>>(emptyList()) }
+
+
     // Hypothèse : les profs ont un ID numérique positif
     val isProf = remember { userId.toIntOrNull() != null && userId.toInt() > 0 }
 
@@ -53,6 +59,43 @@ fun HomeScreen(userId: String) {
                 nextSeanceProf = withContext(Dispatchers.IO) {
                     DatabaseHelper.getNextSeanceForProf(context, userId)
                 }
+                val abs = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getAbsenceByEtudiantId(context, userId)
+                }
+                val total = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
+                }
+                val total_Prof = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getPastSeancesGroupedByDebut(context, userId)
+                }
+                val seancesByDebut = withContext(Dispatchers.IO) {
+                    DatabaseHelper.getPastSeancesGroupedByDebut(context, userId)
+                }
+
+                val allStats = mutableListOf<SeanceStats>()
+
+                for ((_, seances) in seancesByDebut) {
+                    for (seance in seances) {
+                        val etudiants = withContext(Dispatchers.IO) {
+                            DatabaseHelper.getEtudiantsParGroupe(context, seance.groupe)
+                        }
+
+                        val absents = withContext(Dispatchers.IO) {
+                            DatabaseHelper.getAbsencesForSeance(context, seance.id)
+                        }
+
+                        val totalEtudiants = etudiants.size
+                        val absentCount = absents.size
+                        val presentCount = (totalEtudiants - absentCount).coerceAtLeast(0)
+
+                        allStats.add(SeanceStats(seance, absentCount, presentCount))
+                    }
+                }
+
+                absenceCount = abs
+                totalSeances = total
+                pastSeancesGrouped = total_Prof
+                seanceStatsList = allStats
             } else {
                 val (n, p) = withContext(Dispatchers.IO) {
                     DatabaseHelper.getEtudiantById(context, userId)
@@ -63,11 +106,11 @@ fun HomeScreen(userId: String) {
                 nextSeanceEtudiant = withContext(Dispatchers.IO) {
                     DatabaseHelper.getNextSeanceForEtudiant(context, userId)
                 }
-                
+
                 absenceCount = withContext(Dispatchers.IO) {
                     DatabaseHelper.getAbsenceByEtudiantId(context, userId)
                 }
-                
+
                 totalSeances = withContext(Dispatchers.IO) {
                     DatabaseHelper.getNombreSeancesPasseesPourEtudiant(context, userId)
                 }
@@ -128,7 +171,33 @@ fun HomeScreen(userId: String) {
                     }
                 }
             } ?: Text("Aucune séance à venir", color = Color.Gray)
-        } 
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text("Séances passées (groupées par créneau) : ${pastSeancesGrouped.size}")
+
+            LazyColumn(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                items(seanceStatsList) { stat ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = "${stat.seance.nom} (${stat.seance.groupe}) - ${stat.seance.debut}",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.body1
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        PieChart(absences = stat.absents, presences = stat.presents)
+
+
+                    }
+                }
+            }
+        }
         // Affichage pour les étudiants
         else {
             nextSeanceEtudiant?.let { seance ->
