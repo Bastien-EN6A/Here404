@@ -59,15 +59,28 @@ fun PresenceScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Button(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier.padding(bottom = 8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("← Retour")
+            Button(onClick = { navController.popBackStack() }) {
+                Text("← Retour")
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = selectedClass, style = MaterialTheme.typography.h6)
+                Text(text = "Date : $today", style = MaterialTheme.typography.body2)
+            }
+
+            Spacer(modifier = Modifier.width(48.dp)) // pour équilibrer l'espace à droite
         }
 
-        Text(text = selectedClass, style = MaterialTheme.typography.h6)
-        Text(text = "Date : $today", style = MaterialTheme.typography.body1)
 
         Spacer(modifier = Modifier.height(16.dp))
 
