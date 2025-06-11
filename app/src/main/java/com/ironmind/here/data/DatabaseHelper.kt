@@ -121,7 +121,6 @@ object DatabaseHelper {
         } finally {
             db.close()
         }
-
         return null
     }
 
