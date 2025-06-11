@@ -12,7 +12,7 @@ class SftpManager(
     private val password: String = "Hilbert23",
     private val host: String = "10.74.251.68",
     private val port: Int = 22,
-    val DB_NAME: String = "debugging.db" //doit etre le meme que dans DatabaseHelper.kt
+    val DB_NAME: String = "will_emploi_temps_final.db" //doit etre le meme que dans DatabaseHelper.kt
 ) {
     private var session: Session? = null
     private var channelSftp: ChannelSftp? = null

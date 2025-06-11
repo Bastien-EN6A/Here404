@@ -1,6 +1,5 @@
 package com.ironmind.here.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +10,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.ironmind.here.data.DatabaseHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,6 +17,7 @@ import java.time.LocalDate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
+import com.ironmind.here.data.DatabaseHelper
 
 @Composable
 fun PresenceScreen(
@@ -168,6 +167,8 @@ fun PresenceScreen(
                             )
                         }
                     }
+
+                    DatabaseHelper.UpdateRasp(context) //on update le sftp
                     confirmationMessage = "Liste des absences envoyée *validée*"
                 }
             },

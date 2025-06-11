@@ -12,7 +12,7 @@ import com.ironmind.here.sftpManager.DataUploader
 
 object DatabaseHelper {
 
-    private const val DB_NAME = "emploi_temps_final.db"
+    private const val DB_NAME = "will_emploi_temps_final.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
