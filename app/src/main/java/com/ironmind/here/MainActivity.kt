@@ -182,7 +182,8 @@ fun HereApp(isDarkTheme: MutableState<Boolean>) {
                 seanceId = seanceId,
                 groupe = groupe,
                 selectedClassName = coursNom,
-                selectedDate = date
+                selectedDate = date,
+                isDarkTheme = isDarkTheme.value
             )
         }
     }
