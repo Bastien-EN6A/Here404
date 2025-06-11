@@ -156,7 +156,8 @@ fun HereApp(isDarkTheme: MutableState<Boolean>) {
                                 navController.navigate("login") {
                                     popUpTo("splash") { inclusive = true }
                                 }
-                            }
+                            },
+                            isDarkTheme = isDarkTheme.value
                         )
                     }
                 }

@@ -49,7 +49,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF6FFF8))
+            .background(backgroundColor)
             .padding(24.dp)
     ) {
         // Bouton de changement de thème
@@ -81,7 +81,7 @@ fun LoginScreen(
             Text(
                 text = "Connexion",
                 fontSize = 26.sp,
-                color = Color(0xFF2E7D32)
+                color = textColor
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -89,16 +89,19 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text("Email", color = textColor) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 colors = TextFieldDefaults.outlinedTextFieldColors(
-                textColor = textColor,
-                cursorColor = primaryColor,
-                focusedBorderColor = primaryColor,
-                unfocusedBorderColor = textColor.copy(alpha = 0.5f)
-            )
+                    textColor = textColor,
+                    cursorColor = primaryColor,
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = textColor.copy(alpha = 0.5f),
+                    focusedLabelColor = textColor,
+                    unfocusedLabelColor = textColor.copy(alpha = 0.7f),
+                    backgroundColor = if (isDarkTheme.value) Color(0xFF1E1E1E) else Color.White
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -106,7 +109,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Mot de passe") },
+                label = { Text("Mot de passe", color = textColor) },
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -114,11 +117,21 @@ fun LoginScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                            contentDescription = "Toggle Password Visibility"
+                            contentDescription = "Toggle Password Visibility",
+                            tint = textColor
                         )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.outlinedTextFieldColors(
+                    textColor = textColor,
+                    cursorColor = primaryColor,
+                    focusedBorderColor = primaryColor,
+                    unfocusedBorderColor = textColor.copy(alpha = 0.5f),
+                    focusedLabelColor = textColor,
+                    unfocusedLabelColor = textColor.copy(alpha = 0.7f),
+                    backgroundColor = if (isDarkTheme.value) Color(0xFF1E1E1E) else Color.White
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))

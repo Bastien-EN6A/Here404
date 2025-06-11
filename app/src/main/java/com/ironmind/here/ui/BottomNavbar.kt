@@ -24,7 +24,7 @@ fun BottomNavBar(
     onNavigateToProfile: () -> Unit,
     isDarkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    val backgroundColor = if (isDarkTheme) Color(0xFF121212) else Color.White
+    val backgroundColor = if (isDarkTheme) Color.Black else Color.White
     val contentColor = if (isDarkTheme) Color.White else Color.Black
     BottomNavigation(
         backgroundColor = backgroundColor,

@@ -1,5 +1,6 @@
 package com.ironmind.here.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
@@ -25,15 +26,25 @@ fun DrawerContent(
     onLogout: () -> Unit,
     isDarkTheme: Boolean
 ) {
-    Column(modifier = Modifier.padding(16.dp)) {
+    val textColor = if (isDarkTheme) Color.White else Color.Black
+    val backgroundColor = if (isDarkTheme) Color(0xFF121212) else Color.White
+    val dividerColor = if (isDarkTheme) Color.DarkGray else Color.LightGray
+    
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .background(backgroundColor)
+            .padding(16.dp)
+    ) {
         // Logo ou titre de l'app
         Text(
             text = "Here!",
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp),
+            color = textColor
         )
 
         Spacer(modifier = Modifier.height(16.dp))
-        Divider()
+        Divider(color = dividerColor)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Navigation vers l'accueil
@@ -47,31 +58,17 @@ fun DrawerContent(
             Icon(
                 imageVector = Icons.Default.Home,
                 contentDescription = "Accueil",
-                modifier = Modifier.padding(end = 16.dp)
+                modifier = Modifier.padding(end = 16.dp),
+                tint = textColor
             )
-            Text(text = "Accueil")
+            Text(text = "Accueil", color = textColor)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Navigation vers l'emploi du temps
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNavigateToSchedule() }
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Schedule,
-                contentDescription = "Emploi du temps",
-                modifier = Modifier.padding(end = 16.dp)
-            )
-            Text(text = "Emploi du temps")
-        }
-
+        // Spacer à la place du bouton Emploi du temps
         Spacer(modifier = Modifier.height(16.dp))
-        Divider()
+        Divider(color = dividerColor)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Bouton pour changer de thème
@@ -85,9 +82,10 @@ fun DrawerContent(
             Icon(
                 imageVector = if (isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
                 contentDescription = "Changer de thème",
-                modifier = Modifier.padding(end = 16.dp)
+                modifier = Modifier.padding(end = 16.dp),
+                tint = textColor
             )
-            Text(text = if (isDarkTheme) "Mode clair" else "Mode sombre")
+            Text(text = if (isDarkTheme) "Mode clair" else "Mode sombre", color = textColor)
         }
 
         Spacer(modifier = Modifier.height(8.dp))

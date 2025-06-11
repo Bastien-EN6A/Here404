@@ -20,13 +20,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.ironmind.here.R
 import com.ironmind.here.data.DatabaseHelper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
+fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit, isDarkTheme: Boolean = isSystemInDarkTheme()) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
 
@@ -58,7 +59,7 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White.copy(alpha = 0.85f))
+                .background(if (isDarkTheme) Color.Black.copy(alpha = 0.85f) else Color.White.copy(alpha = 0.85f))
                 .zIndex(1f)
         )
 
@@ -89,20 +90,20 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
                     text = fullName,
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF2E7D32)
+                        color = if (isDarkTheme) Color.White else Color(0xFF2E7D32)
                     )
                 )
 
                 Text(
                     text = "ID : $userId",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = Color.Gray)
+                    style = MaterialTheme.typography.bodyMedium.copy(color = if (isDarkTheme) Color.LightGray else Color.Gray)
                 )
 
                 Spacer(Modifier.height(24.dp))
 
                 Card(
                     modifier = Modifier.fillMaxWidth(0.9f),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = if (isDarkTheme) Color(0xFF1E1E1E) else Color.White),
                     elevation = CardDefaults.cardElevation(6.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -133,7 +134,7 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
                 Text(
                     text = "\"L'absence forge la mémoire de la présence.\"",
                     fontStyle = FontStyle.Italic,
-                    color = Color(0xFF2E7D32),
+                    color = if (isDarkTheme) Color(0xFF66BB6A) else Color(0xFF2E7D32),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
@@ -176,7 +177,7 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
 }
 
 @Composable
-fun ProfileItem(label: String, value: String) {
+fun ProfileItem(label: String, value: String, isDarkTheme: Boolean = isSystemInDarkTheme()) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -185,13 +186,16 @@ fun ProfileItem(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(
-                color = Color.DarkGray,
+                color = if (isDarkTheme) Color.LightGray else Color.DarkGray,
                 fontWeight = FontWeight.SemiBold
             )
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontSize = 18.sp,
+                color = if (isDarkTheme) Color.White else Color.Black
+            )
         )
     }
 }

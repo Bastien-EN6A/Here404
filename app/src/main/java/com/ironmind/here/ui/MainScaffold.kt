@@ -100,7 +100,8 @@ fun MainScaffold(
                 currentRoute = currentRoute,
                 onNavigateToHome = onNavigateToHome,
                 onNavigateToSchedule = onNavigateToSchedule,
-                onNavigateToProfile = onNavigateToProfile
+                onNavigateToProfile = onNavigateToProfile,
+                isDarkTheme = isDarkTheme.value
             )
         }
     ) { innerPadding ->
