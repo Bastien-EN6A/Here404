@@ -13,13 +13,16 @@ import com.ironmind.here.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.isSystemInDarkTheme
+import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Thread {
-            DatabaseHelper.UpdateLocal(this)  //on met a jour la base de donnée locale
-        }.start()
+        val executor = Executors.newSingleThreadExecutor()
+        executor.execute {
+            DatabaseHelper.UpdateLocal(this)
+            executor.shutdown()
+        }
         setContent {
             MainApp()
         }
