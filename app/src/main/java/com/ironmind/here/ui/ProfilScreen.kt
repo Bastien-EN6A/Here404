@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
@@ -103,7 +104,11 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit, isDarkThem
 
                 Card(
                     modifier = Modifier.fillMaxWidth(0.9f),
-                    colors = CardDefaults.cardColors(containerColor = if (isDarkTheme) Color(0xFF1E1E1E) else Color.White),
+                    colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkTheme) Color(0xFF1E1E1E) else Color.White,
+                    contentColor = if (isDarkTheme) Color.White else Color.Black
+                ),
+                border = if (isDarkTheme) BorderStroke(1.dp, Color.LightGray.copy(alpha = 0.5f)) else null,
                     elevation = CardDefaults.cardElevation(6.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -116,14 +121,14 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit, isDarkThem
                                 "Date invalide"
                             }
                         }
-                        ProfileItem("Email", email)
+                        ProfileItem("Email", email, isDarkTheme)
                         if (role == "etudiant") {
-                            ProfileItem("Groupe TD", groupeTd)
-                            ProfileItem("Groupe TP", groupeTp)
+                            ProfileItem("Groupe TD", groupeTd, isDarkTheme)
+                            ProfileItem("Groupe TP", groupeTp, isDarkTheme)
                         }
                         if (role == "prof" && nextSeance != null) {
                             Spacer(modifier = Modifier.height(12.dp))
-                            ProfileItem("Prochain cours", "${nextSeance.nom} • $formattedDate")
+                            ProfileItem("Prochain cours", "${nextSeance.nom} • $formattedDate", isDarkTheme)
                         }
 
                     }
@@ -156,19 +161,20 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit, isDarkThem
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
-                title = { Text("Confirmer la déconnexion") },
-                text = { Text("Voulez-vous vraiment vous déconnecter ?") },
+                containerColor = if (isDarkTheme) Color(0xFF1E1E1E) else Color.White,
+                title = { Text("Confirmer la déconnexion", color = if (isDarkTheme) Color.White else Color.Black) },
+                text = { Text("Voulez-vous vraiment vous déconnecter ?", color = if (isDarkTheme) Color.White else Color.DarkGray) },
                 confirmButton = {
                     TextButton(onClick = {
                         showDialog = false
                         onLogout()
                     }) {
-                        Text("Oui")
+                        Text("Oui", color = if (isDarkTheme) Color(0xFF81C784) else Color(0xFF2E7D32))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDialog = false }) {
-                        Text("Annuler")
+                        Text("Annuler", color = if (isDarkTheme) Color.LightGray else Color.Gray)
                     }
                 }
             )
@@ -186,7 +192,7 @@ fun ProfileItem(label: String, value: String, isDarkTheme: Boolean = isSystemInD
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium.copy(
-                color = if (isDarkTheme) Color.LightGray else Color.DarkGray,
+                color = if (isDarkTheme) Color.White else Color.DarkGray,
                 fontWeight = FontWeight.SemiBold
             )
         )
@@ -194,7 +200,8 @@ fun ProfileItem(label: String, value: String, isDarkTheme: Boolean = isSystemInD
             text = value,
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 18.sp,
-                color = if (isDarkTheme) Color.White else Color.Black
+                color = if (isDarkTheme) Color.White else Color.Black,
+                fontWeight = if (isDarkTheme) FontWeight.Medium else FontWeight.Normal
             )
         )
     }
