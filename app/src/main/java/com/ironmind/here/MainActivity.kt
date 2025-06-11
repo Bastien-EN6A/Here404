@@ -7,12 +7,11 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.ironmind.here.data.DatabaseHelper
 import com.ironmind.here.ui.*
-import androidx.navigation.navArgument
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.isSystemInDarkTheme
-
+import androidx.compose.ui.graphics.Color
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +66,8 @@ fun CustomAppTheme(content: @Composable () -> Unit) {
 @Composable
 fun HereApp() {
     val navController = rememberNavController()
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route ?: ""
 
     NavHost(
         navController = navController,
@@ -82,13 +83,13 @@ fun HereApp() {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { userId, role, displayName ->
-                    navController.navigate("home/$userId/$role/$displayName")
+                    navController.navigate("main/$userId/$role/$displayName")
                 }
             )
         }
 
         composable(
-            "home/{userId}/{role}/{displayName}",
+            "main/{userId}/{role}/{displayName}",
             arguments = listOf(
                 navArgument("userId") { type = NavType.StringType },
                 navArgument("role") { type = NavType.StringType },
@@ -99,47 +100,32 @@ fun HereApp() {
             val role = backStackEntry.arguments?.getString("role") ?: ""
             val displayName = backStackEntry.arguments?.getString("displayName") ?: ""
 
-            MainScaffold(
-                userId = userId,
-                etudiantName = displayName,
-                onNavigateToHome = {
-                    navController.navigate("home/$userId/$role/$displayName")
-                },
-                onNavigateToSchedule = {
-                    navController.navigate("schedule/$userId/$role/$displayName")
-                }
-            ) {
-                HomeScreen(userId = userId)
-            }
-        }
-
-        composable(
-            "schedule/{userId}/{role}/{displayName}",
-            arguments = listOf(
-                navArgument("userId") { type = NavType.StringType },
-                navArgument("role") { type = NavType.StringType },
-                navArgument("displayName") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: ""
-            val role = backStackEntry.arguments?.getString("role") ?: ""
-            val displayName = backStackEntry.arguments?.getString("displayName") ?: ""
+            val subNavController = rememberNavController()
+            val subRoute by subNavController.currentBackStackEntryAsState()
+            val currentSubRoute = subRoute?.destination?.route ?: "home"
 
             MainScaffold(
                 userId = userId,
                 etudiantName = displayName,
-                onNavigateToHome = {
-                    navController.navigate("home/$userId/$role/$displayName")
-                },
-                onNavigateToSchedule = {
-                    navController.navigate("schedule/$userId/$role/$displayName")
-                }
+                currentRoute = currentSubRoute,
+                onNavigateToHome = { subNavController.navigate("home") },
+                onNavigateToSchedule = { subNavController.navigate("schedule") },
+                onNavigateToProfile = { subNavController.navigate("profile") }
             ) {
-                ScheduleScreen(
-                    userId = userId,
-                    role = role,
-                    navController = navController
-                )
+                NavHost(
+                    navController = subNavController,
+                    startDestination = "home"
+                ) {
+                    composable("home") {
+                        HomeScreen(userId = userId)
+                    }
+                    composable("schedule") {
+                        ScheduleScreen(userId = userId, role = role, navController = navController)
+                    }
+                    composable("profile") {
+                        ProfileScreen(userId = userId, name = displayName)
+                    }
+                }
             }
         }
 

@@ -15,13 +15,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-
 @Composable
 fun MainScaffold(
     userId: String,
-    etudiantName: String, // ← nom complet de l’étudiant
+    etudiantName: String,
+    currentRoute: String,
     onNavigateToHome: () -> Unit,
     onNavigateToSchedule: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     content: @Composable () -> Unit
 ) {
     val scaffoldState = rememberScaffoldState()
@@ -29,28 +30,26 @@ fun MainScaffold(
 
     Scaffold(
         scaffoldState = scaffoldState,
+
+        // 🟢 Top App Bar
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Here!")
-                },
+                title = { Text("Here!") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = {
-                            scope.launch { scaffoldState.drawerState.open() }
-                        }
-                    ) {
+                    IconButton(onClick = {
+                        scope.launch { scaffoldState.drawerState.open() }
+                    }) {
                         Icon(Icons.Filled.Menu, contentDescription = "Menu")
                     }
                 },
                 actions = {
-                    // Nom Prénom
+                    // Affiche le nom de l'utilisateur
                     Text(
                         text = etudiantName,
                         style = MaterialTheme.typography.body1,
                         modifier = Modifier.padding(end = 8.dp)
                     )
-                    // Cercle gris (future photo)
+                    // Cercle gris pour avatar
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -59,6 +58,8 @@ fun MainScaffold(
                 }
             )
         },
+
+        // 🟢 Drawer avec navigation
         drawerContent = {
             DrawerContent(
                 onNavigateToHome = {
@@ -74,11 +75,21 @@ fun MainScaffold(
                     }
                 }
             )
+        },
+
+        // 🟢 Bottom navigation bar
+        bottomBar = {
+            BottomNavBar(
+                currentRoute = currentRoute,
+                onNavigateToHome = onNavigateToHome,
+                onNavigateToSchedule = onNavigateToSchedule,
+                onNavigateToProfile = onNavigateToProfile
+            )
         }
     ) { innerPadding ->
+        // 🟢 Contenu de la page
         Box(modifier = Modifier.padding(innerPadding)) {
             content()
         }
     }
 }
-
