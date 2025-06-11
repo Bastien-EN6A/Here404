@@ -1,5 +1,6 @@
 package com.ironmind.here.sftpManager
 import android.util.Log
+import com.ironmind.here.data.DatabaseHelper.DB_NAME
 
 class DataDeleter {
     fun deleteOnRaspberry(): Boolean {
@@ -12,7 +13,7 @@ class DataDeleter {
                 return false
             }
 
-            val remotePath = "/data/${sftpManager.DB_NAME}"
+            val remotePath = "/data/${DB_NAME}"
             val success = sftpManager.deleteOnRaspberry(remotePath)
             sftpManager.disconnectSftp()
             success

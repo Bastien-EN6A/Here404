@@ -1,6 +1,7 @@
 package com.ironmind.here.sftpManager
 import android.content.Context
 import android.util.Log
+import com.ironmind.here.data.DatabaseHelper.DB_NAME
 
 class DataUploader {
     fun upload(context: Context): Boolean {
@@ -13,8 +14,8 @@ class DataUploader {
                 return false
             }
 
-            val localPath = context.getDatabasePath(sftpManager.DB_NAME).absolutePath
-            val remotePath = "/data/${sftpManager.DB_NAME}"
+            val localPath = context.getDatabasePath(DB_NAME).absolutePath
+            val remotePath = "/data/${DB_NAME}"
 
             val success = sftpManager.uploadToRaspberry(localPath, remotePath)
             sftpManager.disconnectSftp()

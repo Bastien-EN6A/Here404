@@ -12,7 +12,7 @@ import com.ironmind.here.sftpManager.DataUploader
 
 object DatabaseHelper {
 
-    const val DB_NAME = "bdd_fictive_avec_absences.db"
+    const val DB_NAME = "bdd_fictive_avec_absences.db" //doit etre le meme que dans SftpManager
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
