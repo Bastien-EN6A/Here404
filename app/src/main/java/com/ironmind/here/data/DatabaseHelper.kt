@@ -57,12 +57,32 @@ object DatabaseHelper {
 
 
 
-    fun UpdateRasp(context: Context){
-        val uploadRequest = OneTimeWorkRequestBuilder<DataUploader>().build()
-        val deleteRequest = OneTimeWorkRequestBuilder<DataDeleter>().build()
-        WorkManager.getInstance(context).enqueue(deleteRequest) //pour delete les infos obsoletes
-        WorkManager.getInstance(context).enqueue(uploadRequest) //pour upload la nouvelle bdd sur le raspberry
+    fun UpdateRasp(context: Context) {
+        val TAG = "DatabaseHelper"
+        Thread {
+            try {
+                val deleter = DataDeleter()
+                val deleted = deleter.deleteOnRaspberry()
+
+                if (!deleted) {
+                    Log.e(TAG, "Suppression distante échouée")
+                }
+
+                val uploader = DataUploader()
+                val uploaded = uploader.upload(context)
+
+                if (!uploaded) {
+                    Log.e(TAG, "Upload échoué")
+                } else {
+                    Log.i(TAG, "Upload réussi vers le Raspberry")
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Erreur UpdateRasp() : ${e.message}")
+            }
+        }.start()
     }
+
 
     fun verifyLogin(context: Context, email: String, password: String): Triple<String, String, String>? {
         val dbPath = context.getDatabasePath(DB_NAME)

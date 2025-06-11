@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Thread {
-            DatabaseHelper.UpdateLocal(this)
+            DatabaseHelper.UpdateLocal(this)  //on met a jour la base de donnée locale
         }.start()
         setContent {
             HereApp()
