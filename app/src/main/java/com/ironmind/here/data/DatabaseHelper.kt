@@ -9,10 +9,11 @@ import com.ironmind.here.sftpManager.ClearCache
 import com.ironmind.here.sftpManager.DataDeleter
 import com.ironmind.here.sftpManager.DataDownloader
 import com.ironmind.here.sftpManager.DataUploader
+import java.util.concurrent.Executors
 
 object DatabaseHelper {
 
-    const val DB_NAME = "bdd_fictive_avec_absences.db" //doit etre le meme que dans SftpManager
+    const val DB_NAME = "bdd_fictive_avec_absences.db"
 
     // Copie la base de données depuis les assets si elle n'existe pas encore
     fun copyDatabaseIfNeeded(context: Context) {
@@ -59,7 +60,9 @@ object DatabaseHelper {
 
     fun UpdateRasp(context: Context) {
         val TAG = "DatabaseHelper"
-        Thread {
+        val executor = Executors.newSingleThreadExecutor()
+
+        executor.execute {
             try {
                 val deleter = DataDeleter()
                 val deleted = deleter.deleteOnRaspberry()
@@ -76,11 +79,14 @@ object DatabaseHelper {
                 } else {
                     Log.i(TAG, "Upload réussi vers le Raspberry")
                 }
-
             } catch (e: Exception) {
                 Log.e(TAG, "Erreur UpdateRasp() : ${e.message}")
             }
-        }.start()
+            finally {
+            executor.shutdown()  // on ferme le thread a la fin
+        }
+        }
+
     }
 
     fun verifyLogin(context: Context, email: String, password: String): Triple<String, String, String>? {
