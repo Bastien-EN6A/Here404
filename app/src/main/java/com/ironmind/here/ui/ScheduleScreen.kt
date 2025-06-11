@@ -25,7 +25,15 @@ import androidx.compose.foundation.clickable
 import androidx.navigation.NavController
 import java.util.Locale
 import androidx.compose.foundation.border
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.SelectableDates
+import java.time.Instant
+import java.time.ZoneId
 
 
 
@@ -35,6 +43,7 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
     val coroutineScope = rememberCoroutineScope()
     var seances by remember { mutableStateOf<List<Seance>>(emptyList()) }
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     LaunchedEffect(userId, role) {
         coroutineScope.launch {
@@ -72,10 +81,21 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
             ) {
                 Text("Précédent")
             }
-            Text(
-                text = selectedDate.format(dateFormatter),
-                style = MaterialTheme.typography.h6
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { showDatePicker = true }
+            ) {
+                Text(
+                    text = selectedDate.format(dateFormatter),
+                    style = MaterialTheme.typography.h6
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    contentDescription = "Sélectionner une date",
+                    tint = MaterialTheme.colors.primary
+                )
+            }
             Button(
                 onClick = { selectedDate = selectedDate.plusDays(1) },
                 modifier = Modifier.size(width = 100.dp, height = 40.dp)
@@ -85,6 +105,17 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+        
+        // Affichage du sélecteur de date
+        if (showDatePicker) {
+            DatePickerDialogComponent(
+                onDateSelected = { date ->
+                    selectedDate = date
+                    showDatePicker = false
+                },
+                onDismiss = { showDatePicker = false }
+            )
+        }
 
         Box(
             modifier = Modifier
@@ -171,4 +202,34 @@ fun ScheduleScreen(userId: String, role: String, navController: NavController) {
     }
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DatePickerDialogComponent(
+    onDateSelected: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val datePickerState = rememberDatePickerState()
+    
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            Button(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    val localDate = Instant.ofEpochMilli(millis)
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                    onDateSelected(localDate)
+                } ?: onDismiss()
+            }) {
+                Text("Confirmer")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Annuler")
+            }
+        }
+    ) {
+        DatePicker(state = datePickerState)
+    }
+}
