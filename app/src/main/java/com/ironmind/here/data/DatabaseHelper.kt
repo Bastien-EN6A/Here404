@@ -508,4 +508,25 @@ object DatabaseHelper {
         }
     }
 
+    fun getAbsencesForSeance(context: Context, seanceId: Int): List<String> {
+        val db = openDatabase(context) ?: return emptyList()
+        return try {
+            val result = mutableListOf<String>()
+            val cursor = db.rawQuery(
+                "SELECT etudiant_id FROM absences WHERE seance_id = ?",
+                arrayOf(seanceId.toString())
+            )
+            while (cursor.moveToNext()) {
+                result.add(cursor.getString(0))
+            }
+            cursor.close()
+            result
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        } finally {
+            db.close()
+        }
+    }
+
 }
