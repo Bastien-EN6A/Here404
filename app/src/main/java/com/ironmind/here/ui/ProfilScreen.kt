@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import com.ironmind.here.R
@@ -27,47 +28,43 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
 
-    val (fullName, email, groupeTd, groupeTp) = remember(userId, role) {
-        when (role) {
-            "etudiant" -> {
-                val (nom, prenom) = DatabaseHelper.getEtudiantById(context, userId)
-                val name = "$prenom $nom"
-                val (mail, td, tp) = getEtudiantDetails(context, userId)
-                Quadruple(name, mail, td, tp)
-            }
-            "prof" -> {
-                val nom = DatabaseHelper.getProfNameById(context, userId.toIntOrNull() ?: -1)
-                val mail = getProfEmail(context, userId)
-                Quadruple(nom, mail, "", "")
-            }
-            else -> Quadruple("Inconnu", "Inconnu", "", "")
-        }
+    val (nom, prenom) = remember(userId, role) {
+        if (role == "etudiant") DatabaseHelper.getEtudiantById(context, userId)
+        else DatabaseHelper.getProfById(context, userId)
     }
+
+    val (email, groupeTd, groupeTp) = remember(userId, role) {
+        if (role == "etudiant") getInfosEtudiant(context, userId)
+        else Triple(getEmailProf(context, userId), "", "")
+    }
+
+    val fullName = "$prenom $nom"
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.logo),
-            contentDescription = "background",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().zIndex(0f)
         )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White.copy(alpha = 0.85f))
+                .zIndex(1f)
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .zIndex(2f),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(Modifier.height(32.dp))
-
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
@@ -96,12 +93,29 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
 
                 Spacer(Modifier.height(24.dp))
 
-                ProfileItem("Adresse email", email)
-
-                if (role == "etudiant") {
-                    ProfileItem("Groupe TD", groupeTd)
-                    ProfileItem("Groupe TP", groupeTp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(0.9f),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(6.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        ProfileItem("Email", email)
+                        if (role == "etudiant") {
+                            ProfileItem("Groupe TD", groupeTd)
+                            ProfileItem("Groupe TP", groupeTp)
+                        }
+                    }
                 }
+
+                Spacer(Modifier.height(16.dp))
+
+                Text(
+                    text = "\"L'absence forge la mémoire de la présence.\"",
+                    fontStyle = FontStyle.Italic,
+                    color = Color(0xFF2E7D32),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
             }
 
             Button(
@@ -140,7 +154,45 @@ fun ProfileScreen(userId: String, role: String, onLogout: () -> Unit) {
     }
 }
 
-fun getEtudiantDetails(context: Context, userId: String): Triple<String, String, String> {
+@Composable
+fun ProfileItem(label: String, value: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = Color.DarkGray,
+                fontWeight = FontWeight.SemiBold
+            )
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+        )
+    }
+}
+
+// Prof only
+fun getEmailProf(context: Context, id: String): String {
+    val db = SQLiteDatabase.openDatabase(
+        context.getDatabasePath("will_emploi_temps_final.db").absolutePath,
+        null,
+        SQLiteDatabase.OPEN_READONLY
+    )
+    return try {
+        val cursor = db.rawQuery("SELECT email FROM profs WHERE id = ?", arrayOf(id))
+        if (cursor.moveToFirst()) cursor.getString(0) else "Non trouvé"
+    } catch (e: Exception) {
+        "Erreur"
+    } finally {
+        db.close()
+    }
+}
+
+fun getInfosEtudiant(context: Context, userId: String): Triple<String, String, String> {
     val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
     val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
@@ -150,11 +202,7 @@ fun getEtudiantDetails(context: Context, userId: String): Triple<String, String,
             arrayOf(userId)
         )
         if (cursor.moveToFirst()) {
-            Triple(
-                cursor.getString(0) ?: "Inconnu",
-                cursor.getString(1) ?: "Inconnu",
-                cursor.getString(2) ?: "Inconnu"
-            )
+            Triple(cursor.getString(0) ?: "Inconnu", cursor.getString(1) ?: "Inconnu", cursor.getString(2) ?: "Inconnu")
         } else {
             Triple("Non trouvé", "Non trouvé", "Non trouvé")
         }
@@ -162,46 +210,5 @@ fun getEtudiantDetails(context: Context, userId: String): Triple<String, String,
         Triple("Erreur", "Erreur", "Erreur")
     } finally {
         db.close()
-    }
-}
-
-fun getProfEmail(context: Context, profId: String): String {
-    val dbPath = context.getDatabasePath("will_emploi_temps_final.db").absolutePath
-    val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
-
-    return try {
-        val cursor = db.rawQuery(
-            "SELECT email FROM profs WHERE id = ?",
-            arrayOf(profId)
-        )
-        if (cursor.moveToFirst()) {
-            cursor.getString(0) ?: "Inconnu"
-        } else {
-            "Non trouvé"
-        }
-    } catch (e: Exception) {
-        "Erreur"
-    } finally {
-        db.close()
-    }
-}
-
-data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
-
-@Composable
-fun ProfileItem(label: String, value: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 12.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall.copy(color = Color.DarkGray)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge.copy(color = Color.Black)
-        )
     }
 }

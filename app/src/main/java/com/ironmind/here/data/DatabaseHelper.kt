@@ -202,6 +202,30 @@ object DatabaseHelper {
         }
     }
 
+    fun getProfById(context: Context, id: String): Pair<String, String> {
+        val db = openDatabase(context) ?: return Pair("Erreur", "Erreur")
+
+        return try {
+            val cursor = db.rawQuery(
+                "SELECT nom, prenom FROM profs WHERE id = ?",
+                arrayOf(id)
+            )
+            if (cursor.moveToFirst()) {
+                val nom = cursor.getString(0) ?: "Inconnu"
+                val prenom = cursor.getString(1) ?: "Inconnu"
+                Pair(nom, prenom)
+            } else {
+                Pair("Inconnu", "Inconnu")
+            }
+        } catch (e: Exception) {
+            Log.e("DatabaseHelper", "Erreur getProfById: ${e.message}")
+            Pair("Erreur", "Erreur")
+        } finally {
+            db.close()
+        }
+    }
+
+
     fun getSeancesPourProf(context: Context, profId: String): List<Seance> {
         val dbPath = context.getDatabasePath(DB_NAME).absolutePath
         val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)

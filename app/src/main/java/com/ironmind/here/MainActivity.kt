@@ -11,6 +11,7 @@ import androidx.navigation.navArgument
 import com.ironmind.here.data.DatabaseHelper
 import com.ironmind.here.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,9 +88,19 @@ fun HereApp() {
             val subRoute by subNavController.currentBackStackEntryAsState()
             val currentSubRoute = subRoute?.destination?.route ?: "home"
 
+            val context = LocalContext.current
+            val fullName = remember(userId, role) {
+                if (role == "prof") {
+                    val (nom, prenom) = DatabaseHelper.getProfById(context, userId)
+                    "$prenom $nom"
+                } else {
+                    displayName
+                }
+            }
+
             MainScaffold(
                 userId = userId,
-                etudiantName = displayName,
+                etudiantName = fullName,
                 currentRoute = currentSubRoute,
                 onNavigateToHome = { subNavController.navigate("home") },
                 onNavigateToSchedule = { subNavController.navigate("schedule") },
