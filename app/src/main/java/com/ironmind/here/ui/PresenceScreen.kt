@@ -95,6 +95,7 @@ fun PresenceScreen(navController: NavController, seanceId: Int, groupe: String) 
                             )
                         }
                     }
+                    // Nils envoie le fichier ici (upload vers le rasberry)
                     confirmationMessage = "Liste des absences envoyée *validée*"
                 }
             }) {
